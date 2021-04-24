@@ -1,6 +1,11 @@
 package com.example.demo.student;
 
+import com.example.demo.user_service.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -19,6 +24,13 @@ public class StudentController {
 
     @GetMapping
     public List<Student> getStudents() {
+        //my test
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            System.out.println("User has name: " + userDetails.getUsername());
+        }
+
         return studentService.getStudents();
     }
 
