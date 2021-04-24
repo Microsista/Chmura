@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDate;
-import java.time.Month;
 import java.util.List;
 
 import static java.time.Month.*;
@@ -21,12 +20,14 @@ public class StudentConfig {
                     1L,
                     "Mariam",
                     "mariam.jamal@gmail.com",
-                    LocalDate.of(2000, JANUARY, 5)
+                    "password", LocalDate.of(2000, JANUARY, 5)
             );
 
             Student alex = new Student(
+                    2L,
                     "Alex",
                     "alex@gmail.com",
+                    "alexpass",
                     LocalDate.of(2004, JANUARY, 5)
             );
 

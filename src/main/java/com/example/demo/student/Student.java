@@ -20,6 +20,7 @@ public class Student {
     private Long id;
     private String name;
     private String email;
+    private String password;
     private LocalDate dob;
 
     // Don't store it in the database, mark it as being derived from other fields.
@@ -32,10 +33,11 @@ public class Student {
     public Student(Long id,
                    String name,
                    String email,
-                   LocalDate dob) {
+                   String password, LocalDate dob) {
         this.id = id;
         this.name = name;
         this.email = email;
+        this.password = password;
         this.dob = dob;
     }
 
@@ -96,5 +98,13 @@ public class Student {
                 ", dob=" + dob +
                 ", age=" + age +
                 '}';
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
