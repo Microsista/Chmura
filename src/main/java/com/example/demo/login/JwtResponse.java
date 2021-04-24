@@ -1,27 +1,17 @@
 package com.example.demo.login;
 
-public class JwtResponse {
-    private String token;
-    private String username;
+import java.io.Serializable;
 
-    public JwtResponse(String token, String username) {
-        this.token = token;
-        this.username = username;
+public class JwtResponse implements Serializable {
+
+    private static final long serialVersionUID = -8091879091924046844L;
+    private final String jwttoken;
+
+    public JwtResponse(String jwttoken) {
+        this.jwttoken = jwttoken;
     }
 
     public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
+        return this.jwttoken;
     }
 }

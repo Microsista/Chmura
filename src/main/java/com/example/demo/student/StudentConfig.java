@@ -1,8 +1,10 @@
 package com.example.demo.student;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,6 +14,9 @@ import static java.time.Month.*;
 @Configuration
 public class StudentConfig {
 
+    @Autowired
+    PasswordEncoder encoder;
+
     @Bean
     CommandLineRunner commandLineRunner(
             StudentRepository repository) {
@@ -20,14 +25,15 @@ public class StudentConfig {
                     1L,
                     "Mariam",
                     "mariam.jamal@gmail.com",
-                    "password", LocalDate.of(2000, JANUARY, 5)
+                    encoder.encode("password"),
+                    LocalDate.of(2000, JANUARY, 5)
             );
 
             Student alex = new Student(
                     2L,
                     "Alex",
                     "alex@gmail.com",
-                    "alexpass",
+                    encoder.encode("alexpass"),
                     LocalDate.of(2004, JANUARY, 5)
             );
 
