@@ -22,7 +22,6 @@ public class StudentConfig {
             StudentRepository repository) {
         return args -> {
             Student mariam = new Student(
-                    1L,
                     "Mariam",
                     "mariam.jamal@gmail.com",
                     encoder.encode("password"),
@@ -30,7 +29,6 @@ public class StudentConfig {
             );
 
             Student alex = new Student(
-                    2L,
                     "Alex",
                     "alex@gmail.com",
                     encoder.encode("alexpass"),

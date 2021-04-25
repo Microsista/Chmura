@@ -1,10 +1,12 @@
 package com.example.demo.login;
-import com.example.demo.student.StudentRepository;
+
+import com.example.demo.student.Student;
+import com.example.demo.student.StudentService;
 import com.example.demo.user_service.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.http.ResponseEntity;
-
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,8 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 
-
 import javax.validation.Valid;
+import java.time.LocalDate;
 
 
 @RestController
@@ -22,10 +24,16 @@ import javax.validation.Valid;
 public class LoginController {
 
     @Autowired
+    StudentService userRepository;
+
+    @Autowired
     AuthenticationManager authenticationManager;
 
     @Autowired
     JwtUtils jwtUtils;
+
+    @Autowired
+    PasswordEncoder encoder;
 
 
     @PostMapping("/signIn")
@@ -38,4 +46,31 @@ public class LoginController {
         return ResponseEntity.ok(new JwtResponse(jwt));
     }
 
+
+    @PostMapping("/signUp")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpForm signUpRequest) {
+        LocalDate dob = LocalDate.now();
+
+        // Create new user's account
+        Student student = new Student(signUpRequest.getName(), signUpRequest.getEmail(), encoder.encode(signUpRequest.getPassword()), dob);
+
+        try {
+            userRepository.addNewStudent(student);
+        } catch (IllegalStateException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Error: Email is already taken!");
+        }
+
+        return ResponseEntity.ok("User registered successfully!");
+    }
+
+    @PostMapping("/delete")
+    public ResponseEntity<?> deleteUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        userRepository.deleteStudent(userDetails.getId());
+
+        return ResponseEntity.ok("User deleted successfully!");
+    }
 }

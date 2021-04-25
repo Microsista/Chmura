@@ -30,11 +30,10 @@ public class Student {
     public Student() {
     }
 
-    public Student(Long id,
-                   String name,
-                   String email,
-                   String password, LocalDate dob) {
-        this.id = id;
+    public Student(
+            String name,
+            String email,
+            String password, LocalDate dob) {
         this.name = name;
         this.email = email;
         this.password = password;
