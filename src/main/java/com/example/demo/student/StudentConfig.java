@@ -23,8 +23,8 @@ public class StudentConfig {
         return args -> {
             Student mariam = new Student(
                     "Mariam",
-                    "mariam.jamal@gmail.com",
-                    encoder.encode("password"),
+                    "test@gmail.com",
+                    encoder.encode("123"),
                     LocalDate.of(2000, JANUARY, 5)
             );
 

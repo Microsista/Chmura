@@ -30,6 +30,13 @@ public class StudentService {
         if (studentOptional.isPresent()) {
             throw new IllegalStateException("email taken");
         }
+
+        studentOptional = studentRepository
+                .findStudentByUsername(student.getUsername());
+        if (studentOptional.isPresent()) {
+            throw new IllegalStateException("username taken");
+        }
+
         studentRepository.save(student);
     }
 
@@ -51,15 +58,15 @@ public class StudentService {
     // and use setters to automatically update the entity in your database.
     @Transactional
     public void updateStudent(Long studentId,
-                              String name,
+                              String username,
                               String email) {
         Student student = studentRepository.findById(studentId).orElseThrow(() -> new IllegalStateException(
                 "student with id " + studentId + " does not exist."));
 
-        if (name != null &&
-                name.length() > 0 &&
-                !Objects.equals(student.getName(), name)) {
-            student.setName(name);
+        if (username != null &&
+                username.length() > 0 &&
+                !Objects.equals(student.getUsername(), username)) {
+            student.setUsername(username);
         }
 
         if (email != null &&

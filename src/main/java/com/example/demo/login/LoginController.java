@@ -5,7 +5,6 @@ import com.example.demo.student.StudentService;
 import com.example.demo.user_service.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,14 +51,14 @@ public class LoginController {
         LocalDate dob = LocalDate.now();
 
         // Create new user's account
-        Student student = new Student(signUpRequest.getName(), signUpRequest.getEmail(), encoder.encode(signUpRequest.getPassword()), dob);
+        Student student = new Student(signUpRequest.getUsername(), signUpRequest.getEmail(), encoder.encode(signUpRequest.getPassword()), dob);
 
         try {
             userRepository.addNewStudent(student);
         } catch (IllegalStateException e) {
             return ResponseEntity
                     .badRequest()
-                    .body("Error: Email is already taken!");
+                    .body(e.toString());
         }
 
         return ResponseEntity.ok("User registered successfully!");
