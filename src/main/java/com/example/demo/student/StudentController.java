@@ -26,13 +26,6 @@ public class StudentController {
 
     @GetMapping
     public List<Student> getStudents() {
-        //my test
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
-            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            System.out.println("User has name: " + userDetails.getUsername());
-        }
-
         return studentService.getStudents();
     }
 }

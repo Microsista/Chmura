@@ -14,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.LocalDate;
 
@@ -35,14 +37,39 @@ public class LoginController {
     PasswordEncoder encoder;
 
 
+    @PostMapping("/signInTest")
+    public ResponseEntity<?> signInTest(HttpServletResponse response) throws Exception {
+        //test token
+        String token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJNYXJpYW0iLCJpYXQiOjE2MjAwNzU4ODcsImV4cCI6MTYyMDE2MjI4N30.ZJ_Ot2xNFvNZvvNBObZo_DSTODpopyeXeiECS6q2tMdYdsk-TvRlDgDS1VPyU_KHtjTiU3Xa51R05s_jH6vcvg";
+
+        // create a cookie with test token
+        Cookie cookie = new Cookie("token", token);
+
+        cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days - to delete cookie set this to 0
+        cookie.setPath("/"); // global cookie accessible every where
+
+        //add cookie to response
+        response.addCookie(cookie);
+        return ResponseEntity.ok("Logged in");
+    }
+
     @PostMapping("/signIn")
-    public ResponseEntity<?> createAuthenticationToken(@Valid @RequestBody LoginForm loginRequest) throws Exception {
+    public ResponseEntity<?> createAuthenticationToken(@Valid @RequestBody LoginForm loginRequest, HttpServletResponse response) throws Exception {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
+        String token = jwtUtils.generateJwtToken(authentication);
 
-        return ResponseEntity.ok(new JwtResponse(jwt));
+        // create a cookie with test token
+        Cookie cookie = new Cookie("token", token);
+
+        cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days - to delete cookie set this to 0
+        cookie.setPath("/"); // global cookie accessible every where
+
+        //add cookie to response
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok("Logged in");
     }
 
 
@@ -64,12 +91,24 @@ public class LoginController {
         return ResponseEntity.ok("User registered successfully!");
     }
 
-    @PostMapping("/delete")
+    @GetMapping("/delete")
     public ResponseEntity<?> deleteUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         userRepository.deleteStudent(userDetails.getId());
 
         return ResponseEntity.ok("User deleted successfully!");
+    }
+
+    @GetMapping("/logOut")
+    public ResponseEntity<?> logOut(HttpServletResponse response) {
+        // create a cookie with test token
+        Cookie cookie = new Cookie("token", null);
+        cookie.setMaxAge(0); //to delete cookie set this to 0
+        cookie.setPath("/"); // global cookie accessible every where - needed to delete
+
+        //add cookie to response to destroy cookie on logout
+        response.addCookie(cookie);
+        return ResponseEntity.ok("User logged out!");
     }
 }
