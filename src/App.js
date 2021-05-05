@@ -43,70 +43,70 @@ const App = () => {
     const [isDarkMode, setIsDarkMode] = useState(() => false);
 
     const onLogin = async (username, password) => {
-        // const requestOptions = {
-        //     method: "POST",
-        //     headers: {
-        //         Accept: "application/json",
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //         username,
-        //         password,
-        //     }),
-        // };
-
-        // const rawResponse = await fetch(
-        //     "http://localhost:8080/api/login",
-        //     requestOptions
-        // );
-
-        // if (rawResponse.status === 200) {
-        //     setRedirect(true);
-        //     setLoggedin(true);
-        // } else alert("Wrong username or password");
-
-        setRedirect(true);
-        setLoggedin(true);
-
-        setFiles([
-            ...files,
-            {
-                id: nextId().slice(2, 20),
-                name: "filesadasdsssssad1",
-                size: 5.2,
-                location: "[52.2, 34.3]",
-                owner: "user1",
-                address: "https://picsum.photos/200",
-                type: "image",
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
             },
-            {
-                id: nextId().slice(2, 20),
-                name: "file2",
-                size: 7.4,
-                location: "[51.2, 24.3]",
-                owner: "user2",
-                address: "https://picsum.photos/100",
-                type: "image",
-            },
-            {
-                id: nextId().slice(2, 20),
-                name: "aaaaaaafile2",
-                size: 100.1,
-                location: "[51.2, 24.3]",
-                owner: "user2",
-                address: "https://picsum.photos/300",
-                type: "image",
-            },
-            {
-                id: nextId().slice(2, 20),
-                name: "zzzzzfile2",
-                size: 1.4,
-                location: "[51.2, 24.3]",
-                owner: "user2",
-                address: "asdasdsadsaddsdadsad",
-                type: "text",
-            },
-        ]);
+            body: JSON.stringify({
+                username,
+                password,
+            }),
+        };
+
+        const rawResponse = await fetch(
+            "http://localhost:8080/api/auth/signIn",
+            requestOptions
+        );
+
+        if (rawResponse.status === 200) {
+            setRedirect(true);
+            setLoggedin(true);
+
+            setFiles([
+                ...files,
+                {
+                    id: nextId().slice(2, 20),
+                    name: "filesadasdsssssad1",
+                    size: 5.2,
+                    location: "[52.2, 34.3]",
+                    owner: "user1",
+                    address: "https://picsum.photos/200",
+                    type: "image",
+                },
+                {
+                    id: nextId().slice(2, 20),
+                    name: "file2",
+                    size: 7.4,
+                    location: "[51.2, 24.3]",
+                    owner: "user2",
+                    address: "https://picsum.photos/100",
+                    type: "image",
+                },
+                {
+                    id: nextId().slice(2, 20),
+                    name: "aaaaaaafile2",
+                    size: 100.1,
+                    location: "[51.2, 24.3]",
+                    owner: "user2",
+                    address: "https://picsum.photos/300",
+                    type: "image",
+                },
+                {
+                    id: nextId().slice(2, 20),
+                    name: "zzzzzfile2",
+                    size: 1.4,
+                    location: "[51.2, 24.3]",
+                    owner: "user2",
+                    address: "asdasdsadsaddsdadsad",
+                    type: "text",
+                },
+            ]);
+        } else alert("Wrong username or password");
+
+        // setRedirect(true);
+        // setLoggedin(true);
     };
 
     const onDelete = async (id) => {
