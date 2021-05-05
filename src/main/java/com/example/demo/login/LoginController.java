@@ -37,6 +37,7 @@ public class LoginController {
     PasswordEncoder encoder;
 
 
+    @CrossOrigin
     @PostMapping("/signInTest")
     public ResponseEntity<?> signInTest(HttpServletResponse response) throws Exception {
         //test token
@@ -53,6 +54,7 @@ public class LoginController {
         return ResponseEntity.ok("Logged in");
     }
 
+    @CrossOrigin
     @PostMapping("/signIn")
     public ResponseEntity<?> createAuthenticationToken(@Valid @RequestBody LoginForm loginRequest, HttpServletResponse response) throws Exception {
         Authentication authentication = authenticationManager.authenticate(
