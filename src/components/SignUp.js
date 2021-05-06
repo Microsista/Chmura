@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import logo from "../cloud.png";
+import dp from "react-datepicker";
+import DatePicker from "react-datepicker";
 
-const Login = ({ onLogin }) => {
+const SignUp = ({ onSignUp }) => {
     const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [dob, setDob] = useState(new Date());
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -14,7 +18,7 @@ const Login = ({ onLogin }) => {
         //     return;
         // }
 
-        onLogin(username, password);
+        onSignUp(username, email, password, dob);
     };
 
     return (
@@ -24,7 +28,7 @@ const Login = ({ onLogin }) => {
                     <Link to="/">Go Back</Link>
                 </div>
                 <img src={logo} alt="Could not load cloud logo." />
-                <div className="title unselectable">Login</div>
+                <div className="title unselectable">Sign up</div>
 
                 <div className="form-control">
                     <label className="unselectable">Username</label>
@@ -37,6 +41,16 @@ const Login = ({ onLogin }) => {
                 </div>
 
                 <div className="form-control">
+                    <label className="unselectable">Email</label>
+                    <input
+                        type="text"
+                        placeholder="Enter your email"
+                        // value={username}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                </div>
+
+                <div className="form-control">
                     <label className="unselectable">Password</label>
                     <input
                         type="password"
@@ -45,9 +59,19 @@ const Login = ({ onLogin }) => {
                         onChange={(e) => setPassword(e.target.value)}
                     />
                 </div>
+                <div>
+                    <label className="unselectable">Date of Birth</label>
+                    <div>
+                        <DatePicker
+                            selected={dob}
+                            onChange={(date) => setDob(date)}
+                        />
+                    </div>
+                </div>
+
                 <input
                     type="submit"
-                    value="Login"
+                    value="Sign up"
                     className="btn btn-block"
                     readOnly
                 />
@@ -56,4 +80,4 @@ const Login = ({ onLogin }) => {
     );
 };
 
-export default Login;
+export default SignUp;

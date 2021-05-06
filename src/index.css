@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&display=swap");
-
+@import "react-datepicker/dist/react-datepicker.css";
+@import "reactjs-popup/dist/index.css";
 * {
     box-sizing: border-box;
     margin: 0;
@@ -68,6 +69,32 @@ img {
     width: 20%;
     float: left;
     margin-right: 20px;
+}
+
+.deleteButton {
+    padding: 4px 4px;
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+    outline: none;
+    color: #fff;
+    background-color: #ff0000;
+    border: none;
+    border-radius: 15px;
+    float: right;
+}
+
+.noDeleteButton {
+    padding: 4px 4px;
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+    outline: none;
+    color: #fff;
+    background-color: #00ff40;
+    border: none;
+    border-radius: 15px;
+    float: right;
 }
 
 .mainImg {

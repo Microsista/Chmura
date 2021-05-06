@@ -1,4 +1,5 @@
 import Login from "./components/Login";
+import SignUp from "./components/SignUp";
 import logo from "./cloud.png";
 import Files from "./components/Files";
 import { useState } from "react";
@@ -28,6 +29,7 @@ import {
 import AddFile from "./components/AddFile";
 import nextId from "react-id-generator";
 import DarkModeToggle from "react-dark-mode-toggle";
+import Popup from "reactjs-popup";
 
 const App = () => {
     let history = useHistory();
@@ -36,6 +38,7 @@ const App = () => {
     // const [password, setPassword] = useState("");
     const [redirect, setRedirect] = useState(false);
     const [loggedin, setLoggedin] = useState(false);
+    const [popupOpen, setPopupOpen] = useState(false);
     const [files, setFiles] = useState([]);
     const [sortBy, setSortBy] = useState("name");
     const [ascDesc, setAscDesc] = useState("asc");
@@ -104,6 +107,95 @@ const App = () => {
                 },
             ]);
         } else alert("Wrong username or password");
+
+        // setRedirect(true);
+        // setLoggedin(true);
+    };
+    const deleteAccount = async () => {
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                username,
+            }),
+        };
+
+        setRedirect(false);
+        setLoggedin(false);
+    };
+
+    const onLogOut = async () => {
+        setRedirect(false);
+        setLoggedin(false);
+    };
+
+    const onSignUp = async (username, email, password, dob) => {
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                username,
+                email,
+                password,
+                dob,
+            }),
+        };
+
+        const rawResponse = await fetch(
+            "http://localhost:8080/api/auth/signUp",
+            requestOptions
+        );
+
+        if (rawResponse.status === 200) {
+            setRedirect(true);
+            setLoggedin(true);
+
+            // setFiles([
+            //     ...files,
+            //     {
+            //         id: nextId().slice(2, 20),
+            //         name: "filesadasdsssssad1",
+            //         size: 5.2,
+            //         location: "[52.2, 34.3]",
+            //         owner: "user1",
+            //         address: "https://picsum.photos/200",
+            //         type: "image",
+            //     },
+            //     {
+            //         id: nextId().slice(2, 20),
+            //         name: "file2",
+            //         size: 7.4,
+            //         location: "[51.2, 24.3]",
+            //         owner: "user2",
+            //         address: "https://picsum.photos/100",
+            //         type: "image",
+            //     },
+            //     {
+            //         id: nextId().slice(2, 20),
+            //         name: "aaaaaaafile2",
+            //         size: 100.1,
+            //         location: "[51.2, 24.3]",
+            //         owner: "user2",
+            //         address: "https://picsum.photos/300",
+            //         type: "image",
+            //     },
+            //     {
+            //         id: nextId().slice(2, 20),
+            //         name: "zzzzzfile2",
+            //         size: 1.4,
+            //         location: "[51.2, 24.3]",
+            //         owner: "user2",
+            //         address: "asdasdsadsaddsdadsad",
+            //         type: "text",
+            //     },
+            // ]);
+        } else alert("Wrong username, email, password, or dob");
 
         // setRedirect(true);
         // setLoggedin(true);
@@ -241,6 +333,9 @@ const App = () => {
                             <div className="header">
                                 {loggedin ? null : (
                                     <div className="toLogin">
+                                        <div>
+                                            <Link to="/signup">Sign Up</Link>
+                                        </div>
                                         <Link to="/login">Login</Link>
                                     </div>
                                 )}
@@ -248,6 +343,35 @@ const App = () => {
                                 {loggedin ? (
                                     <p className="loggedIn">
                                         Zalogowano jako {username}
+                                        <div>
+                                            <button
+                                                className="noDeleteButton"
+                                                onClick={onLogOut}
+                                            >
+                                                Log out
+                                            </button>
+                                            <Popup
+                                                open={popupOpen}
+                                                trigger={
+                                                    <button className="deleteButton">
+                                                        {" "}
+                                                        Usuń Konto
+                                                    </button>
+                                                }
+                                                position="right center"
+                                            >
+                                                <div>
+                                                    Are you sure?
+                                                    <button
+                                                        className="deleteButton"
+                                                        onClick={deleteAccount}
+                                                    >
+                                                        {" "}
+                                                        Yes
+                                                    </button>
+                                                </div>
+                                            </Popup>
+                                        </div>
                                     </p>
                                 ) : null}
 
@@ -320,7 +444,7 @@ const App = () => {
                             )}
                             <div className="topBar">
                                 <div> Name</div> <div>Size[MB]</div>{" "}
-                                <div>Location</div>
+                                <div>Coordinates</div>
                                 <div>Commands</div>
                             </div>
                             <Files
@@ -344,6 +468,15 @@ const App = () => {
                 component={() => (
                     <>
                         <Login onLogin={onLogin} setRedirect={setRedirect} />
+                        {redirect ? <Redirect push to="/"></Redirect> : null}
+                    </>
+                )}
+            />
+            <Route
+                path="/signup"
+                component={() => (
+                    <>
+                        <SignUp onSignUp={onSignUp} setRedirect={setRedirect} />
                         {redirect ? <Redirect push to="/"></Redirect> : null}
                     </>
                 )}
