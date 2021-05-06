@@ -3,8 +3,13 @@ package com.example.cameraapp;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
@@ -16,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -49,16 +55,28 @@ public class MainActivity extends AppCompatActivity {
     public final String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/myCamera/";
     Bitmap imageBitmap;
     String fileContent;
+    Location locationGPS;
+
+    private final LocationListener mLocationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(final Location location) {
+            System.out.println("HEY THIS IS LOCATION:");
+            System.out.println(location);
+        }
+    };
+
+    private LocationManager mLocationManager;
 
 
-
+    @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA,
-                WRITE_EXTERNAL_STORAGE}, PERMISSION_GRANTED);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA,
+                WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_GRANTED);
+
 
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
@@ -83,6 +101,27 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // Handle other intents, such as being started from the home screen
         }
+
+        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,
+                    10, mLocationListener);
+            // mLocationManager.getCurrentLocation();
+
+            System.out.println("no fine or coarse location");
+
+            return;
+        }
+        locationGPS = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
     }
 
     void handleSendText(Intent intent) {
@@ -264,6 +303,8 @@ public class MainActivity extends AppCompatActivity {
             String name = "image";//editTextName.getText().toString().trim();
             //Creating parameters
             Map<String,String> params = new Hashtable<String, String>();
+            params.put("szerokosc", String.valueOf(locationGPS.getLatitude()));
+            params.put("wysokosc", String.valueOf(locationGPS.getLongitude()));
             params.put("empsno", "81");
             params.put("storesno", "165");
             params.put("lrSno", "1808");
