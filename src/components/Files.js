@@ -10,6 +10,8 @@ const Files = ({
     sortBy,
     ascDesc,
     onOpen,
+    onFolder,
+    onRestore,
 }) => {
     return (
         <>
@@ -21,6 +23,8 @@ const Files = ({
                     onShare={onShare}
                     onRename={onRename}
                     onOpen={onOpen}
+                    onFolder={onFolder}
+                    onRestore={onRestore}
                 />
             ))}
         </>

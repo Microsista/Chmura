@@ -12,7 +12,7 @@ const Child = ({ id, files }) => {
             {files[id - 1].type == "image" ? (
                 <img src={files[id - 1].address} />
             ) : (
-                files[id - 1].address
+                files[id - 1]
             )}
         </div>
     );

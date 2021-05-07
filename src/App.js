@@ -30,6 +30,9 @@ import AddFile from "./components/AddFile";
 import nextId from "react-id-generator";
 import DarkModeToggle from "react-dark-mode-toggle";
 import Popup from "reactjs-popup";
+import { useCookies } from "react-cookie";
+import axios from "axios";
+import * as _ from "lodash";
 
 const App = () => {
     let history = useHistory();
@@ -44,8 +47,15 @@ const App = () => {
     const [ascDesc, setAscDesc] = useState("asc");
     const [id, setId] = useState("id0");
     const [isDarkMode, setIsDarkMode] = useState(() => false);
+    const [cookies, setCookie] = useCookies(["name"]);
+    const [backup, setBackup] = useState();
+
+    //
+    // On login
+    //
 
     const onLogin = async (username, password) => {
+        // Set a sign in request.
         const requestOptions = {
             method: "POST",
             headers: {
@@ -56,6 +66,7 @@ const App = () => {
                 username,
                 password,
             }),
+            credentials: "include",
         };
 
         const rawResponse = await fetch(
@@ -63,73 +74,164 @@ const App = () => {
             requestOptions
         );
 
+        // If login was successful.
         if (rawResponse.status === 200) {
             setRedirect(true);
             setLoggedin(true);
+            setUsername(username);
 
-            setFiles([
-                ...files,
-                {
-                    id: nextId().slice(2, 20),
-                    name: "filesadasdsssssad1",
-                    size: 5.2,
-                    location: "[52.2, 34.3]",
-                    owner: "user1",
-                    address: "https://picsum.photos/200",
-                    type: "image",
+            // Get filenames.
+            const requestOptions2 = {
+                method: "GET",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
                 },
-                {
-                    id: nextId().slice(2, 20),
-                    name: "file2",
-                    size: 7.4,
-                    location: "[51.2, 24.3]",
-                    owner: "user2",
-                    address: "https://picsum.photos/100",
-                    type: "image",
-                },
-                {
-                    id: nextId().slice(2, 20),
-                    name: "aaaaaaafile2",
-                    size: 100.1,
-                    location: "[51.2, 24.3]",
-                    owner: "user2",
-                    address: "https://picsum.photos/300",
-                    type: "image",
-                },
-                {
-                    id: nextId().slice(2, 20),
-                    name: "zzzzzfile2",
-                    size: 1.4,
-                    location: "[51.2, 24.3]",
-                    owner: "user2",
-                    address: "asdasdsadsaddsdadsad",
-                    type: "text",
-                },
-            ]);
+                credentials: "include",
+            };
+
+            var arr = [];
+            var folders = [];
+            const rawResponse2 = await fetch(
+                "http://localhost:8080/api/fileDrop",
+                requestOptions2
+            )
+                .then((response) => {
+                    return response.json();
+                })
+                .then((data) => {
+                    for (var i in data) {
+                        for (var j = 0; j < data[i].length; j++) {
+                            if (i.startsWith(username)) {
+                                if (i === username) {
+                                    arr.push({
+                                        id: nextId().slice(2, 20),
+                                        name: data[i][j],
+                                        size: 5.2,
+                                        location: "[52.2, 34.3]",
+                                        owner: "user1",
+                                        address: "https://picsum.photos/200",
+                                        type: "text",
+                                    });
+                                } else if (
+                                    !folders.includes(
+                                        i.substr(
+                                            username.length + 1,
+                                            i.length - 1
+                                        )
+                                    )
+                                ) {
+                                    var lArr = [];
+                                    var myId = nextId().slice(2, 20);
+                                    lArr.push({
+                                        id: myId,
+                                        name: i.substr(
+                                            username.length + 1,
+                                            i.length - 1
+                                        ),
+                                        size: 0,
+                                        location: "-",
+                                        owner: "user1",
+                                        address: "https://picsum.photos/200",
+                                        type: "dir",
+                                    });
+                                    for (var i in data) {
+                                        for (
+                                            var j = 0;
+                                            j < data[i].length;
+                                            j++
+                                        ) {
+                                            var tmp =
+                                                username +
+                                                "/" +
+                                                i.substr(
+                                                    username.length + 1,
+                                                    i.length - 1
+                                                );
+                                            if (i.startsWith(tmp)) {
+                                                lArr.push({
+                                                    id: nextId().slice(2, 20),
+                                                    name: data[i][j],
+                                                    size: 5.2,
+                                                    location: "[52.2, 34.3]",
+                                                    owner: "user1",
+                                                    address:
+                                                        "https://picsum.photos/200",
+                                                    type: "text",
+                                                });
+                                            }
+                                        }
+                                    }
+
+                                    folders.push(
+                                        i.substr(
+                                            username.length + 1,
+                                            i.length - 1
+                                        )
+                                    );
+                                    arr.push(lArr);
+                                }
+                            }
+                        }
+                    }
+                });
+            console.log(arr);
+            setFiles(arr);
+            setBackup(arr);
         } else alert("Wrong username or password");
-
-        // setRedirect(true);
-        // setLoggedin(true);
     };
+
+    //
+    //
+    //
+
+    //
+    // On delete account
+    //
     const deleteAccount = async () => {
         const requestOptions = {
-            method: "POST",
+            method: "GET",
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                username,
-            }),
+            // body: JSON.stringify({}),
         };
+        const rawResponse = await fetch(
+            "http://localhost:8080/api/auth/delete",
+            requestOptions
+        );
 
-        setRedirect(false);
-        setLoggedin(false);
+        if (rawResponse.status === 200) {
+            setRedirect(false);
+            setLoggedin(false);
+
+            setFiles([]);
+        } else alert("Cannot delete account");
     };
 
     const onLogOut = async () => {
-        setRedirect(false);
-        setLoggedin(false);
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            // body: JSON.stringify({}),
+        };
+
+        const rawResponse = await fetch(
+            "http://localhost:8080/api/auth/logOut",
+            requestOptions
+        );
+
+        if (rawResponse.status === 200) {
+            setRedirect(false);
+            setLoggedin(false);
+
+            setFiles([]);
+        } else alert("Cannot log out");
     };
 
     const onSignUp = async (username, email, password, dob) => {
@@ -199,6 +301,18 @@ const App = () => {
 
         // setRedirect(true);
         // setLoggedin(true);
+    };
+
+    const onFolder = (file) => {
+        //file.shift();
+
+        setBackup(_.cloneDeep(files));
+        file[0].name = "..";
+        setFiles(file);
+    };
+
+    const onRestore = () => {
+        setFiles(backup);
     };
 
     const onDelete = async (id) => {
@@ -299,16 +413,45 @@ const App = () => {
         // const data = await res.json();
 
         // setTasks([...tasks, data]);
-
         const newFile = {
             id: nextId().slice(2, 20),
-            name: file.name,
+            name: file.file.name,
             size: 0.0,
             location: "[0.0, 0.0]",
             owner: "user1",
-            address: file.cont,
+            address: "",
             type: "text",
         };
+
+        const data = new FormData();
+        data.append("files", file.file);
+        data.append("dir", "test");
+
+        axios
+            .post("http://localhost:8080/api/fileDrop", data, {
+                withCredentials: true,
+            })
+            .then((res) => {
+                console.log(res.statusText);
+            });
+
+        // const requestOptions = {
+        //     method: "POST",
+        //     headers: {
+        //         Accept: "application/json",
+        //         "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({
+        //         username,
+        //         password,
+        //     }),
+        //     credentials: "include",
+        // };
+
+        // const rawResponse = await fetch(
+        //     "http://localhost:8080/api/fileDrop",
+        //     requestOptions
+        // );
 
         setFiles([...files, newFile]);
     };
@@ -455,6 +598,8 @@ const App = () => {
                                 sortBy={sortBy}
                                 ascDesc={ascDesc}
                                 onOpen={onOpen}
+                                onFolder={onFolder}
+                                onRestore={onRestore}
                             />
                             <div className="footer">
                                 Total: {files.length} Files

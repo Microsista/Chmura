@@ -2,7 +2,16 @@ import { FaTimes, FaLock, FaShare, FaFileSignature } from "react-icons/fa";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-const File = ({ file, onDelete, onLock, onShare, onRename, onOpen }) => {
+const File = ({
+    file,
+    onDelete,
+    onLock,
+    onShare,
+    onRename,
+    onOpen,
+    onFolder,
+    onRestore,
+}) => {
     const [edit, setEdit] = useState(false);
     const [id, setId] = useState(0);
     const [value, setValue] = useState("");
@@ -28,6 +37,14 @@ const File = ({ file, onDelete, onLock, onShare, onRename, onOpen }) => {
                             onRenameLocal2(e.target.value, file.id)
                         }
                     />
+                ) : Array.isArray(file) ? (
+                    <Link to={"/"} onClick={() => onFolder(file)}>
+                        <div className="item">{file[0].name}</div>
+                    </Link>
+                ) : file.name === ".." ? (
+                    <Link to={"/"} onClick={() => onRestore()}>
+                        <div className="item">{file.name}</div>
+                    </Link>
                 ) : (
                     <Link
                         to={`./files/${file.id}`}
