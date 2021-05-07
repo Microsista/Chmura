@@ -1,9 +1,12 @@
 package com.example.demo.login;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import javax.validation.constraints.Pattern;
+import java.time.LocalDate;
 
 public class SignUpForm {
     @NotBlank
@@ -20,6 +23,15 @@ public class SignUpForm {
     @Pattern(regexp = "^[A-Za-z0-9]*$", message = "Invalid Input")
     @Size(min = 3, max = 20)
     private String username;
+
+    @NotBlank
+    @DateTimeFormat
+    private LocalDate dob;
+
+
+    public LocalDate getDob() {
+        return dob;
+    }
 
     public String getEmail() {
         return email;

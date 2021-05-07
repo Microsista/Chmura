@@ -77,10 +77,8 @@ public class LoginController {
 
     @PostMapping("/signUp")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpForm signUpRequest) {
-        LocalDate dob = LocalDate.now();
-
         // Create new user's account
-        Student student = new Student(signUpRequest.getUsername(), signUpRequest.getEmail(), encoder.encode(signUpRequest.getPassword()), dob);
+        Student student = new Student(signUpRequest.getUsername(), signUpRequest.getEmail(), encoder.encode(signUpRequest.getPassword()), signUpRequest.getDob());
 
         try {
             userRepository.addNewStudent(student);
