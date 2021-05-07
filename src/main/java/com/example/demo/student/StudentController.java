@@ -14,6 +14,7 @@ import java.util.List;
 
 //for test only
 @RestController
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RequestMapping(path = "api/v1/student")
 public class StudentController {
 

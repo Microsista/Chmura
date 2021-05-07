@@ -37,7 +37,7 @@ public class LoginController {
     PasswordEncoder encoder;
 
 
-    @CrossOrigin
+    @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
     @PostMapping("/signInTest")
     public ResponseEntity<?> signInTest(HttpServletResponse response) throws Exception {
         //test token
