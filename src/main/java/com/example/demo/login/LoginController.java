@@ -21,6 +21,7 @@ import java.time.LocalDate;
 
 
 @RestController
+@CrossOrigin
 @RequestMapping(path = "api/auth")
 public class LoginController {
 
@@ -36,12 +37,13 @@ public class LoginController {
     @Autowired
     PasswordEncoder encoder;
 
-
-    @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
     @PostMapping("/signInTest")
     public ResponseEntity<?> signInTest(HttpServletResponse response) throws Exception {
         //test token
-        String token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJNYXJpYW0iLCJpYXQiOjE2MjAwNzU4ODcsImV4cCI6MTYyMDE2MjI4N30.ZJ_Ot2xNFvNZvvNBObZo_DSTODpopyeXeiECS6q2tMdYdsk-TvRlDgDS1VPyU_KHtjTiU3Xa51R05s_jH6vcvg";
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken("Mariam", "123"));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = jwtUtils.generateJwtToken(authentication);
 
         // create a cookie with test token
         Cookie cookie = new Cookie("token", token);
@@ -54,7 +56,6 @@ public class LoginController {
         return ResponseEntity.ok("Logged in");
     }
 
-    @CrossOrigin
     @PostMapping("/signIn")
     public ResponseEntity<?> createAuthenticationToken(@Valid @RequestBody LoginForm loginRequest, HttpServletResponse response) throws Exception {
         Authentication authentication = authenticationManager.authenticate(

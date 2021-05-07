@@ -26,7 +26,7 @@ import java.util.HashMap;
 
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin
 @RequestMapping(path = "api/fileDrop")
 public class FileController {
 
@@ -40,12 +40,12 @@ public class FileController {
     ServletContext context;
 
     @PostMapping
-    public String uploadFile(@RequestParam("files") MultipartFile[] files, @RequestParam("dir") String dir) {
+    public String uploadFile(@RequestParam("files") MultipartFile[] files, @RequestParam(required = false, defaultValue = "") String dir) {
         return fileService.uploadFilesToDir(files, dir);
     }
 
     @GetMapping
-    public HashMap getFileNamesAndDirs(){
+    public HashMap getFileNamesAndDirs() {
         return fileService.getAllFilenames();
     }
 }
