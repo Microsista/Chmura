@@ -19,9 +19,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.LocalDate;
 
-
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
-@CrossOrigin
 @RequestMapping(path = "api/auth")
 public class LoginController {
 
@@ -92,6 +91,7 @@ public class LoginController {
         return ResponseEntity.ok("User registered successfully!");
     }
 
+
     @GetMapping("/delete")
     public ResponseEntity<?> deleteUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -100,6 +100,7 @@ public class LoginController {
 
         return ResponseEntity.ok("User deleted successfully!");
     }
+
 
     @GetMapping("/logOut")
     public ResponseEntity<?> logOut(HttpServletResponse response) {
