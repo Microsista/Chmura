@@ -9,6 +9,8 @@ import com.example.demo.user_service.UserDetailsImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import javax.servlet.ServletContext;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 
 
@@ -47,5 +50,18 @@ public class FileController {
     @GetMapping
     public HashMap getFileNamesAndDirs() {
         return fileService.getAllFilenames();
+    }
+
+
+    @GetMapping(path = "/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> getFile(@RequestParam("file_path") String filePath) {
+        try {
+            return ResponseEntity.ok(new FileSystemResource(fileService.getFileFor(filePath)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).body("próba dostania się do nie swoich plików");
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.status(404).body("nie znaleziono pliku na serwerze");
+        }
     }
 }

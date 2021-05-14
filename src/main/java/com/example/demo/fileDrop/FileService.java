@@ -7,9 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,7 +25,7 @@ public class FileService {
     @Autowired
     ObjectMapper mapper;
 
-    public String uploadFilesToDir(MultipartFile[] files, String dir){
+    public String uploadFilesToDir(MultipartFile[] files, String dir) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
@@ -48,12 +50,12 @@ public class FileService {
         return "Success";
     }
 
-    private void getFileNames(HashMap <String, List<String>> map, File startDir, String PathName){
+    private void getFileNames(HashMap<String, List<String>> map, File startDir, String PathName) {
         File[] dirs = startDir.listFiles();
-        List <String> fileNames = new ArrayList<>();
-        for(File current: dirs){
-            if(current.isDirectory()){
-                if(PathName != null)
+        List<String> fileNames = new ArrayList<>();
+        for (File current : dirs) {
+            if (current.isDirectory()) {
+                if (PathName != null)
                     getFileNames(map, current, PathName + "/" + startDir.getName());
                 else
                     getFileNames(map, current, startDir.getName());
@@ -61,22 +63,41 @@ public class FileService {
                 fileNames.add(current.getName());
             }
         }
-        if(PathName != null)
-            map.put(PathName+"/"+startDir.getName(), fileNames);
+        if (PathName != null)
+            map.put(PathName + "/" + startDir.getName(), fileNames);
         else
             map.put(startDir.getName(), fileNames);
     }
 
-    public HashMap getAllFilenames(){
-        HashMap <String, List<String>> map = new HashMap<>();
-
+    public HashMap getAllFilenames() {
+        HashMap<String, List<String>> map = new HashMap<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         String myFolder = "C:/uploads/" + userDetails.getUsername();
-        File startDir = new File(myFolder);
-
-        getFileNames(map, startDir, null);
+        File startDir;
+        try {
+            startDir = new File(myFolder);
+            getFileNames(map, startDir, null);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
 
         return map;
+    }
+
+    public File getFileFor(String path) throws FileNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String myFolder = "C:/uploads/";
+        File file;
+        if (path.substring(0, userDetails.getUsername().length() + 1).equals(userDetails.getUsername() + "/")) {
+            file = new File(myFolder + path);
+            if (!file.exists())
+                throw new FileNotFoundException();
+        } else {
+            throw new IllegalArgumentException();
+        }
+        return file;
     }
 }
