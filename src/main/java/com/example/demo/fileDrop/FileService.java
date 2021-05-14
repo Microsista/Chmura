@@ -25,6 +25,8 @@ public class FileService {
     @Autowired
     ObjectMapper mapper;
 
+    private String myFolder = "C:/uploads/";
+
     public String uploadFilesToDir(MultipartFile[] files, String dir) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -53,6 +55,7 @@ public class FileService {
     private void getFileNames(HashMap<String, List<String>> map, File startDir, String PathName) {
         File[] dirs = startDir.listFiles();
         List<String> fileNames = new ArrayList<>();
+        assert dirs != null;
         for (File current : dirs) {
             if (current.isDirectory()) {
                 if (PathName != null)
@@ -73,10 +76,10 @@ public class FileService {
         HashMap<String, List<String>> map = new HashMap<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String myFolder = "C:/uploads/" + userDetails.getUsername();
+        String userFolder = "C:/uploads/" + userDetails.getUsername();
         File startDir;
         try {
-            startDir = new File(myFolder);
+            startDir = new File(userFolder);
             getFileNames(map, startDir, null);
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -86,12 +89,15 @@ public class FileService {
         return map;
     }
 
-    public File getFileFor(String path) throws FileNotFoundException {
+    private boolean authPath(String path) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String myFolder = "C:/uploads/";
+        return path.substring(0, userDetails.getUsername().length() + 1).equals(userDetails.getUsername() + "/");
+    }
+
+    public File getFileFor(String path) throws FileNotFoundException {
         File file;
-        if (path.substring(0, userDetails.getUsername().length() + 1).equals(userDetails.getUsername() + "/")) {
+        if (authPath(path)) {
             file = new File(myFolder + path);
             if (!file.exists())
                 throw new FileNotFoundException();
@@ -99,5 +105,17 @@ public class FileService {
             throw new IllegalArgumentException();
         }
         return file;
+    }
+
+    public boolean deleteFile(String path) throws FileNotFoundException {
+        if (authPath(path)) {
+            File file = new File(myFolder + path);
+            if (!file.exists())
+                throw new FileNotFoundException();
+            else {
+                return file.delete();
+            }
+        }
+        return false;
     }
 }

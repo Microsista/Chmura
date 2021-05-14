@@ -64,4 +64,17 @@ public class FileController {
             return ResponseEntity.status(404).body("nie znaleziono pliku na serwerze");
         }
     }
+
+    @GetMapping(path = "/delete")
+    @ResponseBody
+    public ResponseEntity<?> deleteFile(@RequestParam("file_path") String filePath) {
+        try {
+            if (fileService.deleteFile(filePath))
+                return ResponseEntity.ok("plik został usunięty");
+            else
+                return ResponseEntity.status(400).body("coś poszło nie tak");
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.status(404).body("nie znaleziono pliku na serwerze");
+        }
+    }
 }
