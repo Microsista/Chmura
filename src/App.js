@@ -123,31 +123,24 @@ const App = () => {
             var folders = [];
             await fetch("http://localhost:8080/api/fileDrop", options).then((response) => response.json()).then((data) => {
                 for (var i in data) {
-                    if (i === username)
+                    var folderName = i.substr(username.length + 1, i.length - 1);
+                    if (i === username) // if this is main directory
                         for (var j = 0; j < data[i].length; j++)
                             checkSubfolder(arr, data[i][j], sizes[i][j], "", data[i][j]);
-                    else // if this is a subdirectory
-
-                    for (var j = 0; j < data[i].length; j++) {
-                        var folderName = i.substr(username.length + 1, i.length - 1);
-                        
-                            
-                        else if (!folders.includes(folderName)) {
-                            var lArr = [];
+                    else { // if this is a subdirectory
+                        var lArr = [];
+                        if (!folders.includes(folderName))
                             lArr.push(fileDesc(folderName, 0, "", "", folderName, "dir", "dir"));
-                            for (var k in data)
-                                for (var l = 0; l < data[k].length; l++) {
-                                    var lFolderName = k.substr(username.length + 1, k.length - 1);
-                                    var folderLocation = username + "/" + lFolderName;
-                                    if (k.startsWith(folderLocation))
-                                        checkSubfolder(lArr, data[k][l], sizes[k][l], "", lFolderName + "/" + data[k][l]);
-                                }
-                            folders.push(folderName);
-                            arr.push(lArr);
+                        for (var j = 0; j < data[i].length; j++) {
+                            var folderLocation = username + "/" + folderName;
+                            if (i.startsWith(folderLocation))
+                                checkSubfolder(lArr, data[i][j], sizes[i][j], "", folderName + "/" + data[i][j]);
+                            folders.push(folderLocation);
                         }
-                    }
-                });
+                        arr.push(lArr);
+                    }  
                 }
+            });
                
             setFiles(arr);
             setBackup(arr);
