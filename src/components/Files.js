@@ -15,9 +15,9 @@ const Files = ({
 }) => {
     return (
         <>
-            {_.orderBy(files, sortBy, ascDesc).map((file) => (
+            {_.orderBy(files, sortBy, ascDesc).map((file, i) => (
                 <File
-                    key={file.id}
+                    key={i}
                     file={file}
                     onDelete={onDelete}
                     onShare={onShare}

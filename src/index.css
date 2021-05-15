@@ -206,6 +206,10 @@ img {
     justify-content: space-between;
 }
 
+.fileIcon {
+    margin-right: 10px;
+}
+
 .item {
     display: flex;
     justify-content: center;

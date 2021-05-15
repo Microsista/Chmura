@@ -1,4 +1,12 @@
-import { FaTimes, FaLock, FaShare, FaFileSignature } from "react-icons/fa";
+import {
+    FaTimes,
+    FaShare,
+    FaFileSignature,
+    FaFolder,
+    FaFileWord,
+    FaFileImage,
+    FaFolderOpen,
+} from "react-icons/fa";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -18,7 +26,6 @@ const File = ({
     const onRenameLocal = (idl) => {
         setEdit(!edit);
         onRename(value, id);
-        // onRename(e.target.value, file.id)
     };
 
     const onRenameLocal2 = (value, id) => {
@@ -29,7 +36,7 @@ const File = ({
     return (
         <div className="file">
             <h3>
-                {edit ? (
+                {edit ? ( // If name is being edited
                     <input
                         type="text"
                         // value={file.name}
@@ -37,20 +44,37 @@ const File = ({
                             onRenameLocal2(e.target.value, file.id)
                         }
                     />
-                ) : Array.isArray(file) ? (
+                ) : // else if this is a folder
+                Array.isArray(file) ? (
                     <Link to={"/"} onClick={() => onFolder(file)}>
-                        <div className="item">{file[0].name}</div>
+                        <div className="item">
+                            <FaFolder className="fileIcon" />
+                            {file[0].name}
+                        </div>
                     </Link>
-                ) : file.name === ".." ? (
+                ) : //
+                // if this is not a folder, but it's a go-back button
+                file.name === ".." ? (
                     <Link to={"/"} onClick={() => onRestore()}>
-                        <div className="item">{file.name}</div>
+                        <div className="item">
+                            <FaFolderOpen className="fileIcon" />
+                            {file.name}
+                        </div>
                     </Link>
                 ) : (
+                    // else
                     <Link
                         to={`./files/${file.id}`}
                         onClick={() => onOpen(file.id)}
                     >
-                        <div className="item">{file.name}</div>
+                        <div className="item">
+                            {file.name.endsWith("txt") ? (
+                                <FaFileWord className="fileIcon" />
+                            ) : (
+                                <FaFileImage className="fileIcon" />
+                            )}
+                            {file.name}
+                        </div>
                     </Link>
                 )}
                 <div className="item">

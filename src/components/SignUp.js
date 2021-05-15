@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import logo from "../cloud.png";
-import dp from "react-datepicker";
+// import dp from "react-datepicker";
 import DatePicker from "react-datepicker";
 
 const SignUp = ({ onSignUp }) => {

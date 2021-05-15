@@ -2,18 +2,13 @@ import Login from "./components/Login";
 import SignUp from "./components/SignUp";
 import logo from "./cloud.png";
 import Files from "./components/Files";
-import { useState } from "react";
-import { Switch } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import {
     BrowserRouter as Router,
     Link,
     Route,
     Redirect,
 } from "react-router-dom";
-import { Place } from "react-place";
-import { useHistory } from "react-router-dom";
-import { withRouter } from "react-router";
-import { browserHistory } from "react-router";
 import Help from "./components/Help";
 import Child from "./components/Child";
 
@@ -25,34 +20,46 @@ import {
     FaQuestion,
     FaPlusSquare,
     FaMoon,
+    FaLongArrowAltDown,
 } from "react-icons/fa";
 import AddFile from "./components/AddFile";
 import nextId from "react-id-generator";
-import DarkModeToggle from "react-dark-mode-toggle";
 import Popup from "reactjs-popup";
-import { useCookies } from "react-cookie";
 import axios from "axios";
 import * as _ from "lodash";
 
 const App = () => {
-    let history = useHistory();
     const [showAddFile, setShowAddFile] = useState(false);
     const [username, setUsername] = useState("User");
-    // const [password, setPassword] = useState("");
     const [redirect, setRedirect] = useState(false);
     const [loggedin, setLoggedin] = useState(false);
-    const [popupOpen, setPopupOpen] = useState(false);
     const [files, setFiles] = useState([]);
     const [sortBy, setSortBy] = useState("name");
     const [ascDesc, setAscDesc] = useState("asc");
     const [id, setId] = useState("id0");
-    const [isDarkMode, setIsDarkMode] = useState(() => false);
-    const [cookies, setCookie] = useCookies(["name"]);
-    const [backup, setBackup] = useState();
+    const [backup, setBackup] = useState([]);
+    const [file, setFile] = useState();
+    const [currFolder, setCurrFolder] = useState("");
 
-    //
-    // On login
-    //
+    const fileDesc = (name, size, location, owner, address, type, mytype) => {
+        return {
+            id: nextId().slice(2, 20),
+            name: name,
+            size: size,
+            location: location,
+            owner: owner,
+            address: address,
+            type: type,
+            mytype: mytype,
+        };
+    };
+
+    const checkSubfolder = (arr, name, size, location, address) => {
+        if (name.endsWith("txt"))
+            arr.push(fileDesc(name, size, location, "", address, "text", "text"));
+        else
+            arr.push(fileDesc(name, size, location, "", address, "img", "img"));
+    };
 
     const onLogin = async (username, password) => {
         // Set a sign in request.
@@ -81,101 +88,67 @@ const App = () => {
             setUsername(username);
 
             // Get filenames.
-            const requestOptions2 = {
+            const options = {
                 method: "GET",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                },
                 credentials: "include",
             };
 
+            // Initial fetch of the data to iterate over and get file sizes.
+            var myData;
+            await fetch("http://localhost:8080/api/fileDrop", options)
+                .then((response) => response.json())
+                .then((data) => {
+                    myData = data;
+                });
+
+            var k = 0;
+            for (var i in myData) k++;
+            // Iterate over the data and retrieve file sizes.
+            var sizes = new Array(k);
+            for (var i in myData)
+                sizes[i] = new Array(myData[i].length);
+            for (var i in myData) {
+                for (var j = 0; j < myData[i].length; j++) {
+                    
+                    var resp = await fetch(
+                        `http://localhost:8080/api/fileDrop/download?file_path=Mariam/${myData[i][j]}`,
+                        options
+                    );
+                    sizes[i][j] = resp.headers.get("content-length") / 1000;
+                    console.log(sizes[i][j]);
+                }
+            }
+
             var arr = [];
             var folders = [];
-            const rawResponse2 = await fetch(
-                "http://localhost:8080/api/fileDrop",
-                requestOptions2
-            )
-                .then((response) => {
-                    return response.json();
-                })
-                .then((data) => {
-                    for (var i in data) {
-                        for (var j = 0; j < data[i].length; j++) {
-                            if (i.startsWith(username)) {
-                                if (i === username) {
-                                    arr.push({
-                                        id: nextId().slice(2, 20),
-                                        name: data[i][j],
-                                        size: 5.2,
-                                        location: "[52.2, 34.3]",
-                                        owner: "user1",
-                                        address: "https://picsum.photos/200",
-                                        type: "text",
-                                    });
-                                } else if (
-                                    !folders.includes(
-                                        i.substr(
-                                            username.length + 1,
-                                            i.length - 1
-                                        )
-                                    )
-                                ) {
-                                    var lArr = [];
-                                    var myId = nextId().slice(2, 20);
-                                    lArr.push({
-                                        id: myId,
-                                        name: i.substr(
-                                            username.length + 1,
-                                            i.length - 1
-                                        ),
-                                        size: 0,
-                                        location: "-",
-                                        owner: "user1",
-                                        address: "https://picsum.photos/200",
-                                        type: "dir",
-                                    });
-                                    for (var i in data) {
-                                        for (
-                                            var j = 0;
-                                            j < data[i].length;
-                                            j++
-                                        ) {
-                                            var tmp =
-                                                username +
-                                                "/" +
-                                                i.substr(
-                                                    username.length + 1,
-                                                    i.length - 1
-                                                );
-                                            if (i.startsWith(tmp)) {
-                                                lArr.push({
-                                                    id: nextId().slice(2, 20),
-                                                    name: data[i][j],
-                                                    size: 5.2,
-                                                    location: "[52.2, 34.3]",
-                                                    owner: "user1",
-                                                    address:
-                                                        "https://picsum.photos/200",
-                                                    type: "text",
-                                                });
-                                            }
-                                        }
-                                    }
+            await fetch("http://localhost:8080/api/fileDrop", options).then((response) => response.json()).then((data) => {
+                for (var i in data) {
+                    if (i === username)
+                        for (var j = 0; j < data[i].length; j++)
+                            checkSubfolder(arr, data[i][j], sizes[i][j], "", data[i][j]);
+                    else // if this is a subdirectory
 
-                                    folders.push(
-                                        i.substr(
-                                            username.length + 1,
-                                            i.length - 1
-                                        )
-                                    );
-                                    arr.push(lArr);
+                    for (var j = 0; j < data[i].length; j++) {
+                        var folderName = i.substr(username.length + 1, i.length - 1);
+                        
+                            
+                        else if (!folders.includes(folderName)) {
+                            var lArr = [];
+                            lArr.push(fileDesc(folderName, 0, "", "", folderName, "dir", "dir"));
+                            for (var k in data)
+                                for (var l = 0; l < data[k].length; l++) {
+                                    var lFolderName = k.substr(username.length + 1, k.length - 1);
+                                    var folderLocation = username + "/" + lFolderName;
+                                    if (k.startsWith(folderLocation))
+                                        checkSubfolder(lArr, data[k][l], sizes[k][l], "", lFolderName + "/" + data[k][l]);
                                 }
-                            }
+                            folders.push(folderName);
+                            arr.push(lArr);
                         }
                     }
                 });
-            console.log(arr);
+                }
+               
             setFiles(arr);
             setBackup(arr);
         } else alert("Wrong username or password");
@@ -184,6 +157,161 @@ const App = () => {
     //
     //
     //
+    const refresh = async () => {
+        const requestOptions2 = {
+            method: "GET",
+            credentials: "include",
+        };
+
+        // Initial fetch of the data to iterate over and get file sizes.
+        var myData;
+        await fetch("http://localhost:8080/api/fileDrop", requestOptions2)
+            .then((response) => response.json())
+            .then((data) => {
+                myData = data;
+            });
+
+        var k = 0;
+        for (var i in myData) k++;
+        // Iterate over the data and retrieve file sizes.
+        var sizes = new Array(k);
+        for (var i in myData) {
+            sizes[i] = new Array(myData[i].length);
+            //console.log(sizes[i].length);
+        }
+        for (var i in myData) {
+            for (var j = 0; j < myData[i].length; j++) {
+                const options = {
+                    method: "GET",
+                    credentials: "include",
+                };
+                var resp = await fetch(
+                    `http://localhost:8080/api/fileDrop/download?file_path=Mariam/${myData[i][j]}`,
+                    options
+                );
+                sizes[i][j] = resp.headers.get("content-length") / 1000;
+                console.log(sizes[i][j]);
+            }
+        }
+
+        var locations = [];
+        var arr = [];
+        var folders = [];
+        await fetch("http://localhost:8080/api/fileDrop", requestOptions2)
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                for (var i in data) {
+                    for (var j = 0; j < data[i].length; j++) {
+                        if (i.startsWith(username)) {
+                            if (i === username) {
+                                if (data[i][j].endsWith("txt"))
+                                    arr.push(
+                                        fileDesc(
+                                            data[i][j],
+                                            sizes[i][j],
+                                            locations[i][j],
+                                            "",
+                                            data[i][j],
+                                            "img",
+                                            "img"
+                                        )
+                                    );
+                                else
+                                    arr.push({
+                                        id: nextId().slice(2, 20),
+                                        name: data[i][j],
+                                        size: sizes[i][j],
+                                        location: "[52.2, 34.3]",
+                                        owner: "user1",
+                                        address: data[i][j],
+                                        type: "img",
+                                        mytype: "img",
+                                    });
+                            } else if (
+                                !folders.includes(
+                                    i.substr(username.length + 1, i.length - 1)
+                                )
+                            ) {
+                                var lArr = [];
+                                var myId = nextId().slice(2, 20);
+                                lArr.push({
+                                    id: myId,
+                                    name: i.substr(
+                                        username.length + 1,
+                                        i.length - 1
+                                    ),
+                                    size: 0,
+                                    location: "-",
+                                    owner: "user1",
+                                    address: i.substr(
+                                        username.length + 1,
+                                        i.length - 1
+                                    ),
+                                    type: "dir",
+                                    mytype: "dir",
+                                });
+                                for (var k in data) {
+                                    for (var l = 0; l < data[k].length; l++) {
+                                        var tmp =
+                                            username +
+                                            "/" +
+                                            k.substr(
+                                                username.length + 1,
+                                                k.length - 1
+                                            );
+                                        if (k.startsWith(tmp)) {
+                                            if (data[k][l].endsWith("txt"))
+                                                lArr.push({
+                                                    id: nextId().slice(2, 20),
+                                                    name: data[k][l],
+                                                    size: sizes[k][l],
+                                                    location: "[52.2, 34.3]",
+                                                    owner: "user1",
+                                                    address:
+                                                        k.substr(
+                                                            username.length + 1,
+                                                            k.length - 1
+                                                        ) +
+                                                        "/" +
+                                                        data[k][l],
+                                                    type: "text",
+                                                    mytype: "text",
+                                                });
+                                            else
+                                                lArr.push({
+                                                    id: nextId().slice(2, 20),
+                                                    name: data[k][l],
+                                                    size: sizes[k][l],
+                                                    location: "[52.2, 34.3]",
+                                                    owner: "user1",
+                                                    address:
+                                                        k.substr(
+                                                            username.length + 1,
+                                                            k.length - 1
+                                                        ) +
+                                                        "/" +
+                                                        data[k][l],
+                                                    type: "img",
+                                                    mytype: "img",
+                                                });
+                                        }
+                                    }
+                                }
+
+                                folders.push(
+                                    i.substr(username.length + 1, i.length - 1)
+                                );
+                                arr.push(lArr);
+                            }
+                        }
+                    }
+                }
+            });
+        setFiles(arr);
+        setBackup(arr);
+    };
 
     //
     // On delete account
@@ -195,7 +323,6 @@ const App = () => {
                 Accept: "application/json",
                 "Content-Type": "application/json",
             },
-            // body: JSON.stringify({}),
         };
         const rawResponse = await fetch(
             "http://localhost:8080/api/auth/delete",
@@ -218,7 +345,6 @@ const App = () => {
                 "Content-Type": "application/json",
             },
             credentials: "include",
-            // body: JSON.stringify({}),
         };
 
         const rawResponse = await fetch(
@@ -257,88 +383,50 @@ const App = () => {
         if (rawResponse.status === 200) {
             setRedirect(true);
             setLoggedin(true);
-
-            // setFiles([
-            //     ...files,
-            //     {
-            //         id: nextId().slice(2, 20),
-            //         name: "filesadasdsssssad1",
-            //         size: 5.2,
-            //         location: "[52.2, 34.3]",
-            //         owner: "user1",
-            //         address: "https://picsum.photos/200",
-            //         type: "image",
-            //     },
-            //     {
-            //         id: nextId().slice(2, 20),
-            //         name: "file2",
-            //         size: 7.4,
-            //         location: "[51.2, 24.3]",
-            //         owner: "user2",
-            //         address: "https://picsum.photos/100",
-            //         type: "image",
-            //     },
-            //     {
-            //         id: nextId().slice(2, 20),
-            //         name: "aaaaaaafile2",
-            //         size: 100.1,
-            //         location: "[51.2, 24.3]",
-            //         owner: "user2",
-            //         address: "https://picsum.photos/300",
-            //         type: "image",
-            //     },
-            //     {
-            //         id: nextId().slice(2, 20),
-            //         name: "zzzzzfile2",
-            //         size: 1.4,
-            //         location: "[51.2, 24.3]",
-            //         owner: "user2",
-            //         address: "asdasdsadsaddsdadsad",
-            //         type: "text",
-            //     },
-            // ]);
         } else alert("Wrong username, email, password, or dob");
-
-        // setRedirect(true);
-        // setLoggedin(true);
     };
 
-    const onFolder = (file) => {
-        //file.shift();
-
+    const onFolder = (file2) => {
+        console.log("before folder");
+        console.log(files);
         setBackup(_.cloneDeep(files));
-        file[0].name = "..";
-        setFiles(file);
+        setCurrFolder(file2[0].name);
+        file2[0].name = "..";
+        setFiles(file2);
+        console.log("after folder");
+        console.log(files);
     };
 
     const onRestore = () => {
+        console.log("before restore");
+        console.log(files);
         setFiles(backup);
+        console.log("after restore");
+        console.log(files);
     };
 
     const onDelete = async (id) => {
-        // await fetch(`http://localhost:5000/files/${id}`, {
-        //     method: "DELETE",
-        // });
-        setFiles(files.filter((file) => file.id !== id));
+        // Delete from server
+        const found = files.find((x) => x.id == id);
+        console.log(found.address);
+        const options = {
+            method: "GET",
+            credentials: "include",
+        };
+        var resp = await fetch(
+            `http://localhost:8080/api/fileDrop/delete?file_path=Mariam/${found.address}`,
+            options
+        );
+
+        // Delete from UI
+        // setFiles(files.filter((x) => x.id !== id));
+        // setBackup(backup.filter((x) => x.id !== id));
+        refresh();
     };
 
     const onShare = async (id) => {
         const curFile = files.find((element) => element.id === id);
-        // const requestOptions = {
-        //     method: "PUT",
-        //     headers: {
-        //         Accept: "application/json",
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //         curFile,
-        //     }),
-        // };
 
-        // const rawResponse = await fetch(
-        //     "http://localhost:8080/api/login",
-        //     requestOptions
-        // );
         console.log(curFile);
 
         setFiles([...files]);
@@ -366,28 +454,18 @@ const App = () => {
     };
 
     const onOpen = (id) => {
-        console.log(id);
+        files.find((file, index, array) => {
+            // If we found the file we clicked, and we are in a directory...
+            if (array[0].name == ".." && file.id === id)
+                setFile(currFolder + "/" + file.name);
+            else if (file.id === id) setFile(file.name);
+        });
         setId(id);
     };
 
     const onRename = (value, id) => {
-        // const requestOptions = {
-        //     method: "PUT",
-        //     headers: {
-        //         Accept: "application/json",
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //         curFile,
-        //     }),
-        // };
-        // const rawResponse = await fetch(
-        //     "http://localhost:8080/api/login",
-        //     requestOptions
-        // );
-
         for (var i in files) {
-            if (files[i].id == id) {
+            if (files[i].id === id) {
                 files[i].name = value;
                 break; //Stop this loop, we found it!
             }
@@ -402,58 +480,18 @@ const App = () => {
     };
 
     const onAddFile = (file) => {
-        // const res = await fetch("http://localhost:5000/tasks", {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-type": "application/json",
-        //     },
-        //     body: JSON.stringify(task),
-        // });
-
-        // const data = await res.json();
-
-        // setTasks([...tasks, data]);
-        const newFile = {
-            id: nextId().slice(2, 20),
-            name: file.file.name,
-            size: 0.0,
-            location: "[0.0, 0.0]",
-            owner: "user1",
-            address: "",
-            type: "text",
-        };
-
         const data = new FormData();
         data.append("files", file.file);
-        data.append("dir", "test");
+        data.append("dir", file.dir);
 
         axios
             .post("http://localhost:8080/api/fileDrop", data, {
                 withCredentials: true,
             })
             .then((res) => {
+                refresh();
                 console.log(res.statusText);
             });
-
-        // const requestOptions = {
-        //     method: "POST",
-        //     headers: {
-        //         Accept: "application/json",
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //         username,
-        //         password,
-        //     }),
-        //     credentials: "include",
-        // };
-
-        // const rawResponse = await fetch(
-        //     "http://localhost:8080/api/fileDrop",
-        //     requestOptions
-        // );
-
-        setFiles([...files, newFile]);
     };
     const onNight = () => {
         document.body.style.backgroundColor === "white"
@@ -484,7 +522,7 @@ const App = () => {
                                 )}
 
                                 {loggedin ? (
-                                    <p className="loggedIn">
+                                    <div className="loggedIn">
                                         Zalogowano jako {username}
                                         <div>
                                             <button
@@ -494,7 +532,7 @@ const App = () => {
                                                 Log out
                                             </button>
                                             <Popup
-                                                open={popupOpen}
+                                                open={false}
                                                 trigger={
                                                     <button className="deleteButton">
                                                         {" "}
@@ -515,7 +553,7 @@ const App = () => {
                                                 </div>
                                             </Popup>
                                         </div>
-                                    </p>
+                                    </div>
                                 ) : null}
 
                                 <div className="mainImg">
@@ -586,7 +624,7 @@ const App = () => {
                                 <AddFile onAddFile={onAddFile} onAdd={onAdd} />
                             )}
                             <div className="topBar">
-                                <div> Name</div> <div>Size[MB]</div>{" "}
+                                <div> Name</div> <div>Size[KB]</div>{" "}
                                 <div>Coordinates</div>
                                 <div>Commands</div>
                             </div>
@@ -638,7 +676,9 @@ const App = () => {
             {
                 <Route
                     path="/files/:id"
-                    component={() => <Child id={id} files={files}></Child>}
+                    component={() => (
+                        <Child id={id} file={file} backup={backup}></Child>
+                    )}
                 ></Route>
             }
         </Router>

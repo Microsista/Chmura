@@ -3,10 +3,11 @@ import { useState } from "react";
 const AddFile = ({ onAddFile, onAdd }) => {
     const [name, setName] = useState("");
     const [file, setFile] = useState();
+    const [dir, setDir] = useState("");
     const onSubmit = (e) => {
         e.preventDefault();
 
-        onAddFile({ name, file });
+        onAddFile({ name, file, dir });
         setName(file.name);
         onAdd();
     };
@@ -16,6 +17,15 @@ const AddFile = ({ onAddFile, onAdd }) => {
             <div class="row">
                 <div class="col-md-6">
                     <form method="post" action="#" id="#">
+                        <div className="form-control">
+                            <label className="unselectable">Directory</label>
+                            <input
+                                type="text"
+                                placeholder="Enter directory name for the file"
+                                // value={username}
+                                onChange={(e) => setDir(e.target.value)}
+                            />
+                        </div>
                         <div class="form-group files">
                             <label>Upload Your File </label>
                             <input
