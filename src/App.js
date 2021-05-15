@@ -1,68 +1,30 @@
+// Custom components
 import Login from "./components/Login";
 import SignUp from "./components/SignUp";
-import logo from "./cloud.png";
 import Files from "./components/Files";
-import { useState, useEffect, useRef } from "react";
-import {
-    BrowserRouter as Router,
-    Link,
-    Route,
-    Redirect,
-} from "react-router-dom";
+import AddFile from "./components/AddFile";
 import Help from "./components/Help";
 import Child from "./components/Child";
 
-import {
-    FaSortAmountDown,
-    FaSortAmountDownAlt,
-    FaSortAlphaDown,
-    FaSortAlphaDownAlt,
-    FaQuestion,
-    FaPlusSquare,
-    FaMoon,
-    FaLongArrowAltDown,
-} from "react-icons/fa";
-import AddFile from "./components/AddFile";
+// Resources
+import logo from "./cloud.png";
+
+// External libraries
+import { useState } from "react";
+import { BrowserRouter as Router, Link, Route, Redirect } from "react-router-dom";
+import { FaSortAmountDown, FaSortAmountDownAlt, FaSortAlphaDown,
+    FaSortAlphaDownAlt, FaQuestion, FaPlusSquare, FaMoon } from "react-icons/fa";
 import nextId from "react-id-generator";
 import Popup from "reactjs-popup";
 import axios from "axios";
 import * as _ from "lodash";
 
 const App = () => {
-    const [showAddFile, setShowAddFile] = useState(false);
-    const [username, setUsername] = useState("User");
-    const [redirect, setRedirect] = useState(false);
-    const [loggedin, setLoggedin] = useState(false);
-    const [files, setFiles] = useState([]);
-    const [sortBy, setSortBy] = useState("name");
-    const [ascDesc, setAscDesc] = useState("asc");
-    const [id, setId] = useState("id0");
-    const [backup, setBackup] = useState([]);
-    const [file, setFile] = useState();
-    const [currFolder, setCurrFolder] = useState("");
-
-    const fileDesc = (name, size, location, owner, address, type, mytype) => {
-        return {
-            id: nextId().slice(2, 20),
-            name: name,
-            size: size,
-            location: location,
-            owner: owner,
-            address: address,
-            type: type,
-            mytype: mytype,
-        };
-    };
-
-    const checkSubfolder = (arr, name, size, location, address) => {
-        if (name.endsWith("txt"))
-            arr.push(fileDesc(name, size, location, "", address, "text", "text"));
-        else
-            arr.push(fileDesc(name, size, location, "", address, "img", "img"));
-    };
+    //
+    // Callbacks
+    //
 
     const onLogin = async (username, password) => {
-        // Set a sign in request.
         const requestOptions = {
             method: "POST",
             headers: {
@@ -87,21 +49,20 @@ const App = () => {
             setLoggedin(true);
             setUsername(username);
 
-            // Get filenames.
+            // Inlined refresh function for reliability
             const options = {
                 method: "GET",
                 credentials: "include",
             };
-
+    
             // Initial fetch of the data to iterate over and get file sizes.
             var myData;
-            await fetch("http://localhost:8080/api/fileDrop", options)
-                .then((response) => response.json())
-                .then((data) => {
-                    myData = data;
-                });
-
+            await fetch("http://localhost:8080/api/fileDrop", options).then((response) => response.json()).then((data) => {
+                myData = data;
+            });
+    
             var k = 0;
+            console.log()
             for (var i in myData) k++;
             // Iterate over the data and retrieve file sizes.
             var sizes = new Array(k);
@@ -109,16 +70,15 @@ const App = () => {
                 sizes[i] = new Array(myData[i].length);
             for (var i in myData) {
                 for (var j = 0; j < myData[i].length; j++) {
-                    
                     var resp = await fetch(
-                        `http://localhost:8080/api/fileDrop/download?file_path=Mariam/${myData[i][j]}`,
+                        `http://localhost:8080/api/fileDrop/download?file_path=${username}/${myData[i][j]}`,
                         options
                     );
                     sizes[i][j] = resp.headers.get("content-length") / 1000;
                     console.log(sizes[i][j]);
                 }
             }
-
+    
             var arr = [];
             var folders = [];
             await fetch("http://localhost:8080/api/fileDrop", options).then((response) => response.json()).then((data) => {
@@ -147,168 +107,6 @@ const App = () => {
         } else alert("Wrong username or password");
     };
 
-    //
-    //
-    //
-    const refresh = async () => {
-        const requestOptions2 = {
-            method: "GET",
-            credentials: "include",
-        };
-
-        // Initial fetch of the data to iterate over and get file sizes.
-        var myData;
-        await fetch("http://localhost:8080/api/fileDrop", requestOptions2)
-            .then((response) => response.json())
-            .then((data) => {
-                myData = data;
-            });
-
-        var k = 0;
-        for (var i in myData) k++;
-        // Iterate over the data and retrieve file sizes.
-        var sizes = new Array(k);
-        for (var i in myData) {
-            sizes[i] = new Array(myData[i].length);
-            //console.log(sizes[i].length);
-        }
-        for (var i in myData) {
-            for (var j = 0; j < myData[i].length; j++) {
-                const options = {
-                    method: "GET",
-                    credentials: "include",
-                };
-                var resp = await fetch(
-                    `http://localhost:8080/api/fileDrop/download?file_path=Mariam/${myData[i][j]}`,
-                    options
-                );
-                sizes[i][j] = resp.headers.get("content-length") / 1000;
-                console.log(sizes[i][j]);
-            }
-        }
-
-        var locations = [];
-        var arr = [];
-        var folders = [];
-        await fetch("http://localhost:8080/api/fileDrop", requestOptions2)
-            .then((response) => {
-                return response.json();
-            })
-            .then((data) => {
-                for (var i in data) {
-                    for (var j = 0; j < data[i].length; j++) {
-                        if (i.startsWith(username)) {
-                            if (i === username) {
-                                if (data[i][j].endsWith("txt"))
-                                    arr.push(
-                                        fileDesc(
-                                            data[i][j],
-                                            sizes[i][j],
-                                            locations[i][j],
-                                            "",
-                                            data[i][j],
-                                            "img",
-                                            "img"
-                                        )
-                                    );
-                                else
-                                    arr.push({
-                                        id: nextId().slice(2, 20),
-                                        name: data[i][j],
-                                        size: sizes[i][j],
-                                        location: "[52.2, 34.3]",
-                                        owner: "user1",
-                                        address: data[i][j],
-                                        type: "img",
-                                        mytype: "img",
-                                    });
-                            } else if (
-                                !folders.includes(
-                                    i.substr(username.length + 1, i.length - 1)
-                                )
-                            ) {
-                                var lArr = [];
-                                var myId = nextId().slice(2, 20);
-                                lArr.push({
-                                    id: myId,
-                                    name: i.substr(
-                                        username.length + 1,
-                                        i.length - 1
-                                    ),
-                                    size: 0,
-                                    location: "-",
-                                    owner: "user1",
-                                    address: i.substr(
-                                        username.length + 1,
-                                        i.length - 1
-                                    ),
-                                    type: "dir",
-                                    mytype: "dir",
-                                });
-                                for (var k in data) {
-                                    for (var l = 0; l < data[k].length; l++) {
-                                        var tmp =
-                                            username +
-                                            "/" +
-                                            k.substr(
-                                                username.length + 1,
-                                                k.length - 1
-                                            );
-                                        if (k.startsWith(tmp)) {
-                                            if (data[k][l].endsWith("txt"))
-                                                lArr.push({
-                                                    id: nextId().slice(2, 20),
-                                                    name: data[k][l],
-                                                    size: sizes[k][l],
-                                                    location: "[52.2, 34.3]",
-                                                    owner: "user1",
-                                                    address:
-                                                        k.substr(
-                                                            username.length + 1,
-                                                            k.length - 1
-                                                        ) +
-                                                        "/" +
-                                                        data[k][l],
-                                                    type: "text",
-                                                    mytype: "text",
-                                                });
-                                            else
-                                                lArr.push({
-                                                    id: nextId().slice(2, 20),
-                                                    name: data[k][l],
-                                                    size: sizes[k][l],
-                                                    location: "[52.2, 34.3]",
-                                                    owner: "user1",
-                                                    address:
-                                                        k.substr(
-                                                            username.length + 1,
-                                                            k.length - 1
-                                                        ) +
-                                                        "/" +
-                                                        data[k][l],
-                                                    type: "img",
-                                                    mytype: "img",
-                                                });
-                                        }
-                                    }
-                                }
-
-                                folders.push(
-                                    i.substr(username.length + 1, i.length - 1)
-                                );
-                                arr.push(lArr);
-                            }
-                        }
-                    }
-                }
-            });
-        setFiles(arr);
-        setBackup(arr);
-    };
-
-    //
-    // On delete account
-    //
     const deleteAccount = async () => {
         const requestOptions = {
             method: "GET",
@@ -412,8 +210,6 @@ const App = () => {
         );
 
         // Delete from UI
-        // setFiles(files.filter((x) => x.id !== id));
-        // setBackup(backup.filter((x) => x.id !== id));
         refresh();
     };
 
@@ -486,6 +282,7 @@ const App = () => {
                 console.log(res.statusText);
             });
     };
+
     const onNight = () => {
         document.body.style.backgroundColor === "white"
             ? (document.body.style.backgroundColor = "grey")
@@ -495,6 +292,107 @@ const App = () => {
             ? (document.body.style.color = "white")
             : (document.body.style.color = "black");
     };
+
+    //
+    // Helper functions
+    //
+
+    const fileDesc = (name, size, location, owner, address, type, mytype) => {
+        return {
+            id: nextId().slice(2, 20),
+            name: name,
+            size: size,
+            location: location,
+            owner: owner,
+            address: address,
+            type: type,
+            mytype: mytype,
+        };
+    };
+
+    const checkSubfolder = (arr, name, size, location, address) => {
+        if (name.endsWith("txt"))
+            arr.push(fileDesc(name, size, location, "", address, "text", "text"));
+        else
+            arr.push(fileDesc(name, size, location, "", address, "img", "img"));
+    };
+
+    const refresh = async () => {
+        const options = {
+            method: "GET",
+            credentials: "include",
+        };
+
+        // Initial fetch of the data to iterate over and get file sizes.
+        var myData;
+        await fetch("http://localhost:8080/api/fileDrop", options).then((response) => response.json()).then((data) => {
+            myData = data;
+        });
+
+        var k = 0;
+        console.log()
+        for (var i in myData) k++;
+        // Iterate over the data and retrieve file sizes.
+        var sizes = new Array(k);
+        for (var i in myData)
+            sizes[i] = new Array(myData[i].length);
+        for (var i in myData) {
+            for (var j = 0; j < myData[i].length; j++) {
+                var resp = await fetch(
+                    `http://localhost:8080/api/fileDrop/download?file_path=${username}/${myData[i][j]}`,
+                    options
+                );
+                sizes[i][j] = resp.headers.get("content-length") / 1000;
+                console.log(sizes[i][j]);
+            }
+        }
+
+        var arr = [];
+        var folders = [];
+        await fetch("http://localhost:8080/api/fileDrop", options).then((response) => response.json()).then((data) => {
+            for (var i in data) {
+                var folderName = i.substr(username.length + 1, i.length - 1);
+                if (i === username) // if this is main directory
+                    for (var j = 0; j < data[i].length; j++)
+                        checkSubfolder(arr, data[i][j], sizes[i][j], "", data[i][j]);
+                else { // if this is a subdirectory
+                    var lArr = [];
+                    if (!folders.includes(folderName))
+                        lArr.push(fileDesc(folderName, 0, "", "", folderName, "dir", "dir"));
+                    for (var j = 0; j < data[i].length; j++) {
+                        var folderLocation = username + "/" + folderName;
+                        if (i.startsWith(folderLocation))
+                            checkSubfolder(lArr, data[i][j], sizes[i][j], "", folderName + "/" + data[i][j]);
+                        folders.push(folderLocation);
+                    }
+                    arr.push(lArr);
+                }  
+            }
+        });
+           
+        setFiles(arr);
+        setBackup(arr);
+    };
+
+    //
+    // State
+    //
+
+    const [showAddFile, setShowAddFile] = useState(false);
+    const [username, setUsername] = useState("User");
+    const [redirect, setRedirect] = useState(false);
+    const [loggedin, setLoggedin] = useState(false);
+    const [files, setFiles] = useState([]);
+    const [sortBy, setSortBy] = useState("name");
+    const [ascDesc, setAscDesc] = useState("asc");
+    const [id, setId] = useState("id0");
+    const [backup, setBackup] = useState([]);
+    const [file, setFile] = useState();
+    const [currFolder, setCurrFolder] = useState("");
+
+    //
+    // Render
+    //
 
     return (
         <Router>
@@ -670,7 +568,7 @@ const App = () => {
                 <Route
                     path="/files/:id"
                     component={() => (
-                        <Child id={id} file={file} backup={backup}></Child>
+                        <Child id={id} file={file} backup={backup} username={username}></Child>
                     )}
                 ></Route>
             }

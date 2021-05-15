@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 //import { remote} from 'remote-file-size';
 //import { stat } from "react-native-fs";
 
-const Child = ({ id, file, backup }) => {
+const Child = ({ id, file, backup, username }) => {
     const [data, setData] = useState();
     const [size, setSize] = useState();
 
@@ -27,7 +27,7 @@ const Child = ({ id, file, backup }) => {
 
     useComponentWillMount(() => {
         const rawResponse = fetch(
-            `http://localhost:8080/api/fileDrop/download?file_path=Mariam/${file}`,
+            `http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`,
             requestOptions
         )
             .then((response) => {
@@ -51,7 +51,7 @@ const Child = ({ id, file, backup }) => {
                 data
             ) : (
                 <img
-                    src={`http://localhost:8080/api/fileDrop/download?file_path=Mariam/${file}`}
+                    src={`http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`}
                 />
             )}
         </>
