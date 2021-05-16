@@ -2,10 +2,7 @@ package com.example.demo.login;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 
 public class SignUpForm {
@@ -24,7 +21,7 @@ public class SignUpForm {
     @Size(min = 3, max = 20)
     private String username;
 
-    @NotBlank
+    @NotNull
     @DateTimeFormat
     private LocalDate dob;
 
