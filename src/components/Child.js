@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 //import { remote} from 'remote-file-size';
 //import { stat } from "react-native-fs";
 
-const Child = ({ id, file, backup, username }) => {
+const Child = ({ id, file, backup, username, onGoBack }) => {
     const [data, setData] = useState();
     const [size, setSize] = useState();
 
@@ -42,9 +42,13 @@ const Child = ({ id, file, backup, username }) => {
             });
     });
 
+    const onBack = () => {
+        onGoBack()
+    }
+
     return (
         <>
-            <Link to="/">Go Back</Link>
+            <Link to="/" onClick={onBack}>Go Back</Link>
             <div>File path: {file}</div>
             <div>File size: {size / 1000} KB</div>
             {file.endsWith("txt") ? (

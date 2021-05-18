@@ -78,16 +78,15 @@ const File = ({
                     </Link>
                 )}
                 <div className="item">
-                    <p>{file.size}</p>
+                    {file.type === "dir" ? null : <p>{file.size}</p>}
                 </div>
 
-                <div className="item">{file.location}</div>
-
-                {/* <FaLock
-                    style={{ color: "black", cursor: "pointer" }}
-                    onClick={() => onLock(file)}
-                /> */}
                 <div className="item">
+                    {file.type === "dir" ? null : <p>{file.location}</p>}
+                </div>
+
+                <div className="item">
+                    {file.type === "dir" || Array.isArray(file) ? null : <>
                     <FaFileSignature
                         style={{ color: "black", cursor: "pointer" }}
                         onClick={() => onRenameLocal(file.id)}
@@ -102,6 +101,8 @@ const File = ({
                             onDelete(file.id);
                         }}
                     />
+                    </>
+                    }
                 </div>
             </h3>
         </div>

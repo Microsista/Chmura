@@ -18,11 +18,16 @@ import nextId from "react-id-generator";
 import Popup from "reactjs-popup";
 import axios from "axios";
 import * as _ from "lodash";
+import { useEffect } from "react";
 
 const App = () => {
     //
     // Callbacks
     //
+
+    const onGoBack = () => {
+        setDummy(dummy+1);
+    }
 
     const onLogin = async (username, password) => {
         const requestOptions = {
@@ -113,6 +118,7 @@ const App = () => {
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
+                credentials: "include",
             },
         };
         const rawResponse = await fetch(
@@ -174,7 +180,93 @@ const App = () => {
         if (rawResponse.status === 200) {
             setRedirect(true);
             setLoggedin(true);
+            setUsername(username);
+
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    username,
+                    password,
+                }),
+                credentials: "include",
+            };
+    
+            const rawResponse = await fetch(
+                "http://localhost:8080/api/auth/signIn",
+                requestOptions
+            );
+    
+            // If login was successful.
+            if (rawResponse.status === 200) {
+                setRedirect(true);
+                setLoggedin(true);
+                setUsername(username);
+    
+                // Inlined refresh function for reliability
+                const options = {
+                    method: "GET",
+                    credentials: "include",
+                };
+        
+                // Initial fetch of the data to iterate over and get file sizes.
+                var myData;
+                await fetch("http://localhost:8080/api/fileDrop", options).then((response) => response.json()).then((data) => {
+                    myData = data;
+                });
+        
+                var k = 0;
+                console.log()
+                for (var i in myData) k++;
+                // Iterate over the data and retrieve file sizes.
+                var sizes = new Array(k);
+                for (var i in myData)
+                    sizes[i] = new Array(myData[i].length);
+                for (var i in myData) {
+                    for (var j = 0; j < myData[i].length; j++) {
+                        var resp = await fetch(
+                            `http://localhost:8080/api/fileDrop/download?file_path=${username}/${myData[i][j]}`,
+                            options
+                        );
+                        sizes[i][j] = resp.headers.get("content-length") / 1000;
+                        console.log(sizes[i][j]);
+                    }
+                }
+        
+                var arr = [];
+                var folders = [];
+                await fetch("http://localhost:8080/api/fileDrop", options).then((response) => response.json()).then((data) => {
+                    for (var i in data) {
+                        var folderName = i.substr(username.length + 1, i.length - 1);
+                        if (i === username) // if this is main directory
+                            for (var j = 0; j < data[i].length; j++)
+                                checkSubfolder(arr, data[i][j], sizes[i][j], "", data[i][j]);
+                        else { // if this is a subdirectory
+                            var lArr = [];
+                            if (!folders.includes(folderName))
+                                lArr.push(fileDesc(folderName, 0, "", "", folderName, "dir", "dir"));
+                            for (var j = 0; j < data[i].length; j++) {
+                                var folderLocation = username + "/" + folderName;
+                                if (i.startsWith(folderLocation))
+                                    checkSubfolder(lArr, data[i][j], sizes[i][j], "", folderName + "/" + data[i][j]);
+                                folders.push(folderLocation);
+                            }
+                            arr.push(lArr);
+                        }  
+                    }
+                });
+                   
+                setFiles(arr);
+                setBackup(arr);
+            } else alert("Wrong username or password");
+
+
+
         } else alert("Wrong username, email, password, or dob");
+
     };
 
     const onFolder = (file2) => {
@@ -205,7 +297,7 @@ const App = () => {
             credentials: "include",
         };
         var resp = await fetch(
-            `http://localhost:8080/api/fileDrop/delete?file_path=Mariam/${found.address}`,
+            `http://localhost:8080/api/fileDrop/delete?file_path=${username}/${found.address}`,
             options
         );
 
@@ -285,12 +377,22 @@ const App = () => {
 
     const onNight = () => {
         document.body.style.backgroundColor === "white"
-            ? (document.body.style.backgroundColor = "grey")
+            ? (document.body.style.backgroundColor = "black")
             : (document.body.style.backgroundColor = "white");
 
         document.body.style.color === "black"
             ? (document.body.style.color = "white")
             : (document.body.style.color = "black");
+
+        var elements = document.getElementsByClassName("fa");
+        for (var i = 0; i < elements.length; i++) {
+            document.body.style.backgroundColor === "black" ? elements.item(i).style.color = "white" : elements.item(i).style.color = "black";
+        }
+
+        var elements = document.getElementsByClassName("logo");
+        for (var i = 0; i < elements.length; i++) {
+            document.body.style.backgroundColor === "black" ? elements.item(i).style.filter="invert(100%)" : elements.item(i).style.filter="invert(0%)";
+        }
     };
 
     //
@@ -318,6 +420,8 @@ const App = () => {
     };
 
     const refresh = async () => {
+        
+
         const options = {
             method: "GET",
             credentials: "include",
@@ -389,6 +493,19 @@ const App = () => {
     const [backup, setBackup] = useState([]);
     const [file, setFile] = useState();
     const [currFolder, setCurrFolder] = useState("");
+    const [dummy, setDummy] = useState(0);
+
+    useEffect(() => {
+        var elements = document.getElementsByClassName("fa");
+        for (var i = 0; i < elements.length; i++) {
+            document.body.style.backgroundColor === "black" ? elements.item(i).style.color = "white" : elements.item(i).style.color = "black";
+        }
+
+        var elements = document.getElementsByClassName("logo");
+        for (var i = 0; i < elements.length; i++) {
+            document.body.style.backgroundColor === "black" ? elements.item(i).style.filter="invert(100%)" : elements.item(i).style.filter="invert(0%)";
+        }
+    })
 
     //
     // Render
@@ -451,6 +568,7 @@ const App = () => {
                                     <img
                                         src={logo}
                                         alt="Could not load cloud logo."
+                                        className="logo"
                                     />
                                 </div>
 
@@ -464,6 +582,7 @@ const App = () => {
                                         color: "black",
                                         cursor: "pointer",
                                     }}
+                                    className="fa"
                                     onClick={onAdd}
                                 />
                                 <FaSortAlphaDown
@@ -471,6 +590,7 @@ const App = () => {
                                         color: "black",
                                         cursor: "pointer",
                                     }}
+                                    className="fa"
                                     onClick={onSortAlphaDown}
                                 />
                                 <FaSortAlphaDownAlt
@@ -478,6 +598,7 @@ const App = () => {
                                         color: "black",
                                         cursor: "pointer",
                                     }}
+                                    className="fa"
                                     onClick={onSortAlphaDownAlt}
                                 />
                                 <FaSortAmountDown
@@ -485,6 +606,7 @@ const App = () => {
                                         color: "black",
                                         cursor: "pointer",
                                     }}
+                                    className="fa"
                                     onClick={onSortAmountDown}
                                 />
                                 <FaSortAmountDownAlt
@@ -492,6 +614,7 @@ const App = () => {
                                         color: "black",
                                         cursor: "pointer",
                                     }}
+                                    className="fa"
                                     onClick={onSortAmountDownAlt}
                                 />
                                 <FaMoon
@@ -499,6 +622,7 @@ const App = () => {
                                         color: "black",
                                         cursor: "pointer",
                                     }}
+                                    className="fa"
                                     onClick={onNight}
                                 />
                                 <Link to="/help">
@@ -507,6 +631,7 @@ const App = () => {
                                             color: "black",
                                             cursor: "pointer",
                                         }}
+                                        className="fa"
                                         onClick={onHelp}
                                     />
                                 </Link>
@@ -531,7 +656,7 @@ const App = () => {
                                 onRestore={onRestore}
                             />
                             <div className="footer">
-                                Total: {files.length} Files
+                                Total: {files.length} Paths
                             </div>
                         </div>
                     </>
@@ -541,7 +666,7 @@ const App = () => {
                 path="/login"
                 component={() => (
                     <>
-                        <Login onLogin={onLogin} setRedirect={setRedirect} />
+                        <Login onLogin={onLogin} onGoBack={onGoBack} setRedirect={setRedirect} />
                         {redirect ? <Redirect push to="/"></Redirect> : null}
                     </>
                 )}
@@ -550,7 +675,7 @@ const App = () => {
                 path="/signup"
                 component={() => (
                     <>
-                        <SignUp onSignUp={onSignUp} setRedirect={setRedirect} />
+                        <SignUp onSignUp={onSignUp} setRedirect={setRedirect} onGoBack={onGoBack}/>
                         {redirect ? <Redirect push to="/"></Redirect> : null}
                     </>
                 )}
@@ -559,7 +684,7 @@ const App = () => {
                 path="/help"
                 component={() => (
                     <>
-                        <Help onLogin={onLogin} setRedirect={setRedirect} />
+                        <Help onLogin={onLogin} setRedirect={setRedirect} onGoBack={onGoBack}/>
                         {/* {redirect ? <Redirect push to="/"></Redirect> : null} */}
                     </>
                 )}
@@ -568,7 +693,7 @@ const App = () => {
                 <Route
                     path="/files/:id"
                     component={() => (
-                        <Child id={id} file={file} backup={backup} username={username}></Child>
+                        <Child id={id} file={file} backup={backup} username={username} onGoBack={onGoBack}></Child>
                     )}
                 ></Route>
             }

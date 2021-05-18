@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logo from "../cloud.png";
 // import dp from "react-datepicker";
 import DatePicker from "react-datepicker";
 
-const SignUp = ({ onSignUp }) => {
+const SignUp = ({ onSignUp, onGoBack }) => {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -21,17 +21,33 @@ const SignUp = ({ onSignUp }) => {
         onSignUp(username, email, password, dob);
     };
 
+    const onBack = () => {
+        onGoBack()
+    }
+
+    useEffect(() => {
+        var elements = document.getElementsByClassName("fa");
+        for (var i = 0; i < elements.length; i++) {
+            document.body.style.backgroundColor === "black" ? elements.item(i).style.color = "white" : elements.item(i).style.color = "black";
+        }
+
+        var elements = document.getElementsByClassName("logo");
+        for (var i = 0; i < elements.length; i++) {
+            document.body.style.backgroundColor === "black" ? elements.item(i).style.filter="invert(100%)" : elements.item(i).style.filter="invert(0%)";
+        }
+    })
+
     return (
         <form className="login-form" onSubmit={onSubmit}>
             <div className="loginContainer">
                 <div className="goBack">
-                    <Link to="/">Go Back</Link>
+                    <Link to="/" onClick={onBack}>Go Back</Link>
                 </div>
-                <img src={logo} alt="Could not load cloud logo." />
+                <img className="logo" src={logo} alt="Could not load cloud logo." />
                 <div className="title unselectable">Sign up</div>
 
                 <div className="form-control">
-                    <label className="unselectable">Username</label>
+                    <label className="unselectable">Username (at least 3 characters)</label>
                     <input
                         type="text"
                         placeholder="Enter your username"
@@ -51,7 +67,7 @@ const SignUp = ({ onSignUp }) => {
                 </div>
 
                 <div className="form-control">
-                    <label className="unselectable">Password</label>
+                    <label className="unselectable">Password (at least 6 characters)</label>
                     <input
                         type="password"
                         placeholder="Enter your password"
@@ -68,7 +84,6 @@ const SignUp = ({ onSignUp }) => {
                         />
                     </div>
                 </div>
-
                 <input
                     type="submit"
                     value="Sign up"

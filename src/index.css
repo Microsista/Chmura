@@ -99,7 +99,6 @@ img {
 
 .mainImg {
     width: 500px;
-
     right: 20px;
 }
 
@@ -180,7 +179,7 @@ img {
 }
 
 .file {
-    background: #f4f4f4;
+    background: #f4f4f46e;
     margin: 5px;
     padding: 10px 20px;
     cursor: pointer;
