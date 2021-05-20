@@ -1,4 +1,28 @@
 <resources>
     <string name="app_name">CameraApp</string>
     <string name="button">Button</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_username">Username</string>
+    <string name="prompt_password">Password</string>
+    <string name="prompt_email">Email</string>
+    <string name="date_of_birth">Date of Birth</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_sign_up">Sign up</string>
+    <string name="placeholder_text">No text</string>
+    <string name="login_name">Signed in as</string>
+    <string name="send_image">Send image</string>
+    <string name="send_text">Send text</string>
+    <string name="camera">Take a picture</string>
+    <string name="images">Images</string>
+    <string name="texts">Texts</string>
+
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >=6 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="night_mode_off">NIGHT MODE OFF</string>
+    <string name="night_mode_on">NIGHT MODE ON</string>
 </resources>
