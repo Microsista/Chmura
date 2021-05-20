@@ -36,8 +36,6 @@ public class LoginDataSource {
 
 
             String url = "http://192.168.1.13:8080/api/auth/signIn";
-
-
             StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                     new Response.Listener<String>() {
                         @Override
@@ -100,9 +98,7 @@ public class LoginDataSource {
                         parsed = new String(response.data);
                     }
                     return Response.success(parsed, HttpHeaderParser.parseCacheHeaders(response));
-
                 }
-
 
                 @Override
                 public Map<String, String> getHeaders() throws AuthFailureError {
