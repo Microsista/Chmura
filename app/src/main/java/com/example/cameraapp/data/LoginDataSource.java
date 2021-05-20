@@ -30,11 +30,6 @@ public class LoginDataSource {
     public Result<LoggedInUser> login(String username, String password, Context context) {
 
         try {
-            // TODO: handle loggedInUser authentication
-
-            //                    new LoggedInUser(java.util.UUID.randomUUID().toString(), "");
-
-
             String url = "http://192.168.1.13:8080/api/auth/signIn";
             StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                     new Response.Listener<String>() {
@@ -74,7 +69,6 @@ public class LoginDataSource {
 
                 @Override
                 protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                    //return super.parseNetworkResponse(response);
                     System.out.println("HEYEYEYEYEYEYE");
                     String parsed;
                     try {
@@ -120,12 +114,7 @@ public class LoginDataSource {
                     System.out.println(headers);
                     return headers;
                 }
-
-
             };
-            // CookieStore is just an interface, you can implement it and do things like
-// save the cookies to disk or what ever.
-            // Optionally, you can just use the default CookieManager
 
             Volley.newRequestQueue(context).add(postRequest);
 
@@ -174,13 +163,7 @@ public class LoginDataSource {
     public Result<LoggedInUser> register(String username, String password, Context context) {
 
         try {
-            // TODO: handle loggedInUser authentication
-
-            //                    new LoggedInUser(java.util.UUID.randomUUID().toString(), "");
-
-
             String url = "http://192.168.1.13:8080/api/auth/signIn";
-
 
             StringRequest postRequest = new StringRequest(Request.Method.POST, url,
                     new Response.Listener<String>() {
@@ -271,10 +254,6 @@ public class LoginDataSource {
 
 
             };
-            // CookieStore is just an interface, you can implement it and do things like
-// save the cookies to disk or what ever.
-            // Optionally, you can just use the default CookieManager
-
             Volley.newRequestQueue(context).add(postRequest);
 
 
