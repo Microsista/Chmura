@@ -1,5 +1,7 @@
 package com.example.cameraapp.ui.login;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.res.Resources;
@@ -8,6 +10,8 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -35,9 +39,45 @@ import java.net.CookieManager;
 import java.net.CookiePolicy;
 
 import static android.content.Context.UI_MODE_SERVICE;
+import static com.example.cameraapp.App.CHANNEL_1_ID;
+import static com.example.cameraapp.App.CHANNEL_2_ID;
 
 public class LoginFragment extends Fragment {
     static boolean polish = false;
+
+    private NotificationManagerCompat notificationManager;
+    private EditText editTextTitle;
+    private EditText editTextMessage;
+
+    public void sendOnChannel1(View v) {
+        String title = editTextTitle.getText().toString();
+        String message = editTextMessage.getText().toString();
+
+        Notification notification = new NotificationCompat.Builder(getActivity(), CHANNEL_1_ID)
+                .setSmallIcon(R.drawable.ic_1)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .build();
+
+        notificationManager.notify(1, notification);
+    }
+
+    public void sendOnChannel2(View v) {
+        String title = editTextTitle.getText().toString();
+        String message = editTextMessage.getText().toString();
+
+        Notification notification = new NotificationCompat.Builder(getActivity(), CHANNEL_2_ID)
+                .setSmallIcon(R.drawable.ic_2)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build();
+
+        notificationManager.notify(2, notification);
+
+    }
 
     public LoginFragment() {
         // Required empty public constructor
@@ -46,6 +86,10 @@ public class LoginFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        notificationManager = NotificationManagerCompat.from(getActivity());
+
+
     }
 
     @Override
@@ -61,6 +105,9 @@ public class LoginFragment extends Fragment {
         super.onCreate(savedInstanceState);
         System.out.println("IS ADDED? " + isAdded());
 
+        editTextTitle = view.findViewById(R.id.edit_text_title);
+        editTextMessage = view.findViewById(R.id.edit_text_message);
+
         CookieManager manager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
         CookieHandler.setDefault( manager  );
 
@@ -74,6 +121,23 @@ public class LoginFragment extends Fragment {
         final ImageButton darkModeButton = view.findViewById(R.id.bDarkMode);
         final ImageButton languageButton = view.findViewById(R.id.bTranslate);
         final ProgressBar loadingProgressBar = view.findViewById(R.id.loading);
+        final Button bSend1 = view.findViewById(R.id.bSend1);
+        final Button bSend2 = view.findViewById(R.id.bSend2);
+
+        bSend1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendOnChannel1(view);
+            }
+        });
+
+        bSend2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendOnChannel2(view);
+            }
+        });
+
 
         loginViewModel.getLoginFormState().observe(getActivity(), new Observer<LoginFormState>() {
             @Override

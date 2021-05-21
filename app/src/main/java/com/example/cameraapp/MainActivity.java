@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.RequiresApi;
@@ -52,6 +53,15 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.setVmPolicy(builder.build());
 
         getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, new LoginFragment(), "loginTag").commit();
+
+//        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener( MainActivity.this,  new OnSuccessListener<InstanceIdResult>() {
+//            @Override
+//            public void onSuccess(InstanceIdResult instanceIdResult) {
+//                String updatedToken = instanceIdResult.getToken();
+//                Log.e("Updated Token",updatedToken);
+//
+//            }
+//        });
     }
 }
 

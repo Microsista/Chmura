@@ -6,6 +6,44 @@
     android:layout_height="match_parent"
     tools:context=".ui.login.LoginFragment">
 
+    <EditText
+        android:id="@+id/edit_text_title"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:hint="Title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/edit_text_message"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="100dp"
+        android:hint="Message"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/bSend1"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="40dp"
+        android:onClick="sendOnChannel1"
+        android:text="Send 1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/bSend2"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="116dp"
+        android:layout_marginTop="40dp"
+        android:onClick="sendOnChannel2"
+        android:text="Send 2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/usernameTextField"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
