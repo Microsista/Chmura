@@ -1,11 +1,12 @@
 package com.example.demo.student;
 
+import com.example.demo.user_service.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -14,14 +15,36 @@ import java.util.Optional;
 public class StudentService {
 
     private final StudentRepository studentRepository;
+    private final SharedFilesRepository sharedFilesRepository;
 
     @Autowired
-    public StudentService(StudentRepository studentRepository) {
+    public StudentService(StudentRepository studentRepository, SharedFilesRepository sharedFilesRepository) {
         this.studentRepository = studentRepository;
+        this.sharedFilesRepository = sharedFilesRepository;
     }
 
     public List<Student> getStudents() {
         return studentRepository.findAll();
+    }
+
+    public void shareFile(Student student, String filePath) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Optional<Student> optional = studentRepository.findStudentByUsername(userDetails.getUsername());
+        if (optional.isEmpty())
+            throw new IllegalStateException("Logged user doesn't exist??");
+        Student me = optional.get();
+        Optional<SharedFile> sharedFile = sharedFilesRepository.findSharedFileByPath(filePath);
+        SharedFile file;
+        if (sharedFile.isEmpty()) {
+            file = new SharedFile(filePath, me.getEmail());
+            me.addSharedFile(file);
+        } else {
+            file = sharedFile.get();
+        }
+
+        student.addSharedFile(file);
+        sharedFilesRepository.save(file);
     }
 
     public void addNewStudent(Student student) {

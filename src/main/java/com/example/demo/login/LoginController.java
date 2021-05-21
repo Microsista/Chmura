@@ -13,11 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.time.LocalDate;
 
 
 @RestController
@@ -45,15 +42,7 @@ public class LoginController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtUtils.generateJwtToken(authentication);
 
-        // create a cookie with test token
-        Cookie cookie = new Cookie("token", token);
-
-        cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days - to delete cookie set this to 0
-        cookie.setPath("/"); // global cookie accessible every where
-
-        //add cookie to response
-        response.addCookie(cookie);
-        return ResponseEntity.ok("Logged in");
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping("/signIn")
@@ -63,16 +52,7 @@ public class LoginController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtUtils.generateJwtToken(authentication);
 
-        // create a cookie with test token
-        Cookie cookie = new Cookie("token", token);
-
-        cookie.setMaxAge(7 * 24 * 60 * 60); // expires in 7 days - to delete cookie set this to 0
-        cookie.setPath("/"); // global cookie accessible every where
-
-        //add cookie to response
-        response.addCookie(cookie);
-
-        return ResponseEntity.ok("Logged in");
+        return ResponseEntity.ok(token);
     }
 
 
@@ -99,17 +79,5 @@ public class LoginController {
         userRepository.deleteStudent(userDetails.getId());
 
         return ResponseEntity.ok("User deleted successfully!");
-    }
-
-    @GetMapping("/logOut")
-    public ResponseEntity<?> logOut(HttpServletResponse response) {
-        // create a cookie with test token
-        Cookie cookie = new Cookie("token", null);
-        cookie.setMaxAge(0); //to delete cookie set this to 0
-        cookie.setPath("/"); // global cookie accessible every where - needed to delete
-
-        //add cookie to response to destroy cookie on logout
-        response.addCookie(cookie);
-        return ResponseEntity.ok("User logged out!");
     }
 }

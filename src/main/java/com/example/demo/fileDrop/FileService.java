@@ -95,6 +95,15 @@ public class FileService {
         return path.substring(0, userDetails.getUsername().length() + 1).equals(userDetails.getUsername() + "/");
     }
 
+    public boolean fileExists(String path) {
+        if (authPath(path)) {
+            path = myFolder + path;
+            File file = new File(path);
+            return file.exists();
+        }
+        return false;
+    }
+
     public File getFileFor(String path) throws FileNotFoundException {
         File file;
         if (authPath(path)) {

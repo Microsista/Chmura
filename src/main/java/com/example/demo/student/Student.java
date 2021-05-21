@@ -3,6 +3,10 @@ package com.example.demo.student;
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table
@@ -23,12 +27,19 @@ public class Student {
     private String password;
     private LocalDate dob;
 
+
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    private Set<SharedFile> shared = new HashSet<>();
+
     // Don't store it in the database, mark it as being derived from other fields.
     @Transient
     private Integer age;
 
     public Student() {
+    }
 
+    public Set<SharedFile> getShared() {
+        return shared;
     }
 
     public Student(
@@ -39,6 +50,15 @@ public class Student {
         this.email = email;
         this.password = password;
         this.dob = dob;
+    }
+
+    public void addSharedFile(SharedFile file) {
+        file.addUserToShare(this);
+        shared.add(file);
+    }
+
+    public void deleteSharedFile(SharedFile file) {
+        shared.remove(file);
     }
 
     public Long getId() {
