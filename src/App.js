@@ -35,12 +35,14 @@ const App = () => {
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
+                //Authorization: 
             },
             body: JSON.stringify({
                 username,
                 password,
             }),
-            credentials: "include",
+            //credentials: "include",
+            //mode: "no-cors"
         };
 
         const rawResponse = await fetch(
