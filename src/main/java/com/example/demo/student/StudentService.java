@@ -23,6 +23,10 @@ public class StudentService {
         this.sharedFilesRepository = sharedFilesRepository;
     }
 
+    public void save(Student s) {
+        studentRepository.save(s);
+    }
+
     public List<Student> getStudents() {
         return studentRepository.findAll();
     }

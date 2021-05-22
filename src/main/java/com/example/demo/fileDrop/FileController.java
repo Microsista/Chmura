@@ -35,7 +35,7 @@ import java.util.Set;
 
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin
 @RequestMapping(path = "api/fileDrop")
 public class FileController {
 
@@ -47,9 +47,6 @@ public class FileController {
 
     @Autowired
     StudentService userRepository;
-
-    @Autowired
-    ServletContext context;
 
     @PostMapping
     public String uploadFile(@RequestParam("files") MultipartFile[] files, @RequestParam(required = false, defaultValue = "") String dir) {
@@ -95,11 +92,9 @@ public class FileController {
 
     @PostMapping(path = "/share")
     public ResponseEntity<?> shareFile(@RequestParam("file_path") String filePath, @RequestParam("email") String email) {
-        System.out.println(filePath);
         Optional<Student> optionalShareUser = userRepository.getStudentByEmail(email);
         if (optionalShareUser.isEmpty())
             return ResponseEntity.status(404).body("nie znaleziono użytkownika o tym emailu");
-
         if (fileService.fileExists(filePath)) {
             userRepository.shareFile(optionalShareUser.get(), filePath);
             return ResponseEntity.ok("plik udostępniony");
@@ -107,19 +102,60 @@ public class FileController {
         return ResponseEntity.status(404).body("nie można udostępnić pliku");
     }
 
+    @GetMapping("/sharedWith")
+    public ResponseEntity<?> shareFilesWith(@RequestParam("file_path") String filePath) {
+        Student me = me();
+        if (fileService.fileExists(filePath)) {
+            Optional<SharedFile> sharedFile = sharedFilesRepository.findSharedFileByPath(filePath);
+            if (sharedFile.isPresent()) {
+                return ResponseEntity.ok(sharedFile.get().sharedWith());
+            }
+        }
+        return ResponseEntity.status(404).body("file not found or unauthorized");
+    }
+
+    @DeleteMapping("/unshare")
+    public ResponseEntity<?> unShareFiles(@RequestParam("file_path") String filePath, @RequestParam(name = "email", required = false, defaultValue = "") String email) {
+        Student me = me();
+        Optional<SharedFile> file = sharedFilesRepository.findSharedFileByPath(filePath);
+        SharedFile realFile;
+        if (file.isPresent())
+            realFile = file.get();
+        else
+            return ResponseEntity.status(404).body("file not found");
+        if (!realFile.getOwner().equals(me.getEmail()))
+            return ResponseEntity.status(401).body("not yours file");
+
+        if (!email.equals("")) {
+            Optional<Student> user = userRepository.getStudentByEmail(email);
+            if (user.isPresent()) {
+                user.get().deleteSharedFile(realFile);
+                userRepository.save(user.get());
+            } else
+                return ResponseEntity.status(404).body("user not found");
+        } else {
+            realFile.delete();
+            sharedFilesRepository.delete(realFile);
+        }
+        return ResponseEntity.ok("file unshared");
+    }
+
     @GetMapping("/shared")
     public ResponseEntity<?> shareFiles() throws JsonProcessingException {
+        Student me = me();
+        Set<SharedFile> test = me.getShared();
+        ObjectMapper objectMapper = new ObjectMapper();
+        System.out.println(objectMapper.writeValueAsString(test));
+        return ResponseEntity.ok(test);
+    }
+
+    private Student me() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Optional<Student> student = userRepository.getStudentByEmail(userDetails.getEmail());
-
-        if (student.isPresent()) {
-            Student me = student.get();
-            Set<SharedFile> test = me.getShared();
-            ObjectMapper objectMapper = new ObjectMapper();
-            System.out.println(objectMapper.writeValueAsString(test));
-            return ResponseEntity.ok(test);
-        }
-        return ResponseEntity.status(500).body("sth is really wrong m8");
+        if (student.isPresent())
+            return student.get();
+        else
+            throw new IllegalStateException("user not logged in???");
     }
 }

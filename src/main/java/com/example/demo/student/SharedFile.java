@@ -25,6 +25,15 @@ public class SharedFile {
     @ManyToMany(mappedBy = "shared")
     private Set<Student> sharedStudent = new HashSet<>();
 
+    public String sharedWith() {
+        StringBuilder res = new StringBuilder();
+        for (Student s : sharedStudent) {
+            if (!s.getEmail().equals(owner))
+                res.append(s.getEmail()).append("\n");
+        }
+        return res.toString();
+    }
+
     public SharedFile(String filePath, String owner) {
         this.filePath = filePath;
         this.owner = owner;
