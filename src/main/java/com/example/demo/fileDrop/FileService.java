@@ -86,15 +86,19 @@ public class FileService {
     }
 
     public File getFileFor(String path) throws FileNotFoundException {
-        File file;
+        File file = new File(myFolder + path);
+        if (!file.exists())
+            throw new FileNotFoundException();
+
         if (authPath(path)) {
-            file = new File(myFolder + path);
-            if (!file.exists())
-                throw new FileNotFoundException();
+            return file;
         } else {
-            throw new IllegalArgumentException();
+            SharedFile sharedFile = sharedFilesRepository.findSharedFileByPathOrError(path);
+            if (sharedFile.getSharedStudent().contains(me()))
+                return file;
+            else
+                throw new IllegalArgumentException();
         }
-        return file;
     }
 
     public boolean deleteFile(String path) throws FileNotFoundException {
