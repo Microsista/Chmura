@@ -26,12 +26,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import javax.persistence.EntityNotFoundException;
 import javax.servlet.ServletContext;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 
 @RestController
@@ -42,19 +40,13 @@ public class FileController {
     @Autowired
     FileService fileService;
 
-    @Autowired
-    SharedFilesRepository sharedFilesRepository;
-
-    @Autowired
-    StudentService userRepository;
-
     @PostMapping
     public String uploadFile(@RequestParam("files") MultipartFile[] files, @RequestParam(required = false, defaultValue = "") String dir) {
         return fileService.uploadFilesToDir(files, dir);
     }
 
     @GetMapping
-    public HashMap getFileNamesAndDirs() {
+    public FileNames getFileNamesAndDirs() {
         return fileService.getAllFilenames();
     }
 
@@ -71,17 +63,11 @@ public class FileController {
         }
     }
 
-    @GetMapping(path = "/delete")
+    @DeleteMapping(path = "/delete")
     @ResponseBody
     public ResponseEntity<?> deleteFile(@RequestParam("file_path") String filePath) {
         try {
             if (fileService.deleteFile(filePath)) {
-                Optional<SharedFile> file = sharedFilesRepository.findSharedFileByPath(filePath);
-                if (file.isPresent()) {
-                    SharedFile realFile = file.get();
-                    realFile.delete();
-                    sharedFilesRepository.delete(realFile);
-                }
                 return ResponseEntity.ok("plik został usunięty");
             } else
                 return ResponseEntity.status(400).body("coś poszło nie tak");
@@ -92,70 +78,40 @@ public class FileController {
 
     @PostMapping(path = "/share")
     public ResponseEntity<?> shareFile(@RequestParam("file_path") String filePath, @RequestParam("email") String email) {
-        Optional<Student> optionalShareUser = userRepository.getStudentByEmail(email);
-        if (optionalShareUser.isEmpty())
-            return ResponseEntity.status(404).body("nie znaleziono użytkownika o tym emailu");
-        if (fileService.fileExists(filePath)) {
-            userRepository.shareFile(optionalShareUser.get(), filePath);
-            return ResponseEntity.ok("plik udostępniony");
+        try {
+            fileService.shareFile(filePath, email);
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.status(404).body("file not found");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(404).body("user not found");
         }
-        return ResponseEntity.status(404).body("nie można udostępnić pliku");
+        return ResponseEntity.ok("file shared");
     }
 
+    //who are files shared to
     @GetMapping("/sharedWith")
     public ResponseEntity<?> shareFilesWith(@RequestParam("file_path") String filePath) {
-        Student me = me();
-        if (fileService.fileExists(filePath)) {
-            Optional<SharedFile> sharedFile = sharedFilesRepository.findSharedFileByPath(filePath);
-            if (sharedFile.isPresent()) {
-                return ResponseEntity.ok(sharedFile.get().sharedWith());
-            }
+        try {
+            return ResponseEntity.ok(fileService.getSharedWith(filePath));
+        } catch (EntityNotFoundException | NoSuchElementException e) {
+            return ResponseEntity.status(404).body("file not found");
         }
-        return ResponseEntity.status(404).body("file not found or unauthorized");
     }
 
+    //unshare shared file, with mail unshare with that user, without unshare with all users if owner or unshare with owner
     @DeleteMapping("/unshare")
-    public ResponseEntity<?> unShareFiles(@RequestParam("file_path") String filePath, @RequestParam(name = "email", required = false, defaultValue = "") String email) {
-        Student me = me();
-        Optional<SharedFile> file = sharedFilesRepository.findSharedFileByPath(filePath);
-        SharedFile realFile;
-        if (file.isPresent())
-            realFile = file.get();
-        else
-            return ResponseEntity.status(404).body("file not found");
-        if (!realFile.getOwner().equals(me.getEmail()))
-            return ResponseEntity.status(401).body("not yours file");
-
-        if (!email.equals("")) {
-            Optional<Student> user = userRepository.getStudentByEmail(email);
-            if (user.isPresent()) {
-                user.get().deleteSharedFile(realFile);
-                userRepository.save(user.get());
-            } else
-                return ResponseEntity.status(404).body("user not found");
-        } else {
-            realFile.delete();
-            sharedFilesRepository.delete(realFile);
+    public ResponseEntity<?> unShareFile(@RequestParam("file_path") String filePath, @RequestParam(name = "email", required = false, defaultValue = "") String email) {
+        try {
+            fileService.unShareFile(filePath, email);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(404).body("file or user not found");
         }
         return ResponseEntity.ok("file unshared");
     }
 
+    //files shared by me
     @GetMapping("/shared")
-    public ResponseEntity<?> shareFiles() throws JsonProcessingException {
-        Student me = me();
-        Set<SharedFile> test = me.getShared();
-        ObjectMapper objectMapper = new ObjectMapper();
-        System.out.println(objectMapper.writeValueAsString(test));
-        return ResponseEntity.ok(test);
-    }
-
-    private Student me() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        Optional<Student> student = userRepository.getStudentByEmail(userDetails.getEmail());
-        if (student.isPresent())
-            return student.get();
-        else
-            throw new IllegalStateException("user not logged in???");
+    public ResponseEntity<?> sharedFiles() {
+        return ResponseEntity.ok(fileService.sharedFiles());
     }
 }

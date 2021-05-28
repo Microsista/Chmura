@@ -1,31 +1,60 @@
 package com.example.demo.fileDrop;
 
+import com.example.demo.student.SharedFile;
+import com.example.demo.student.SharedFilesRepository;
+import com.example.demo.student.Student;
+import com.example.demo.student.StudentService;
 import com.example.demo.user_service.UserDetailsImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityNotFoundException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 @Service
 public class FileService {
 
     @Autowired
-    ObjectMapper mapper;
+    SharedFilesRepository sharedFilesRepository;
+
+    @Autowired
+    StudentService userRepository;
 
     private String myFolder = "C:/uploads/";
+
+    private Student me() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Optional<Student> student = userRepository.getStudentByEmail(userDetails.getEmail());
+        if (student.isPresent())
+            return student.get();
+        else
+            throw new IllegalStateException("user not logged in???");
+    }
+
+
+    private boolean authPath(String path) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return path.substring(0, userDetails.getUsername().length() + 1).equals(userDetails.getUsername() + "/");
+    }
+
+    private boolean fileExists(String path) {
+        if (authPath(path)) {
+            path = myFolder + path;
+            File file = new File(path);
+            return file.exists();
+        }
+        return false;
+    }
 
     public String uploadFilesToDir(MultipartFile[] files, String dir) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -52,56 +81,8 @@ public class FileService {
         return "Success";
     }
 
-    private void getFileNames(HashMap<String, List<String>> map, File startDir, String PathName) {
-        File[] dirs = startDir.listFiles();
-        List<String> fileNames = new ArrayList<>();
-        assert dirs != null;
-        for (File current : dirs) {
-            if (current.isDirectory()) {
-                if (PathName != null)
-                    getFileNames(map, current, PathName + "/" + startDir.getName());
-                else
-                    getFileNames(map, current, startDir.getName());
-            } else {
-                fileNames.add(current.getName());
-            }
-        }
-        if (PathName != null)
-            map.put(PathName + "/" + startDir.getName(), fileNames);
-        else
-            map.put(startDir.getName(), fileNames);
-    }
-
-    public HashMap getAllFilenames() {
-        HashMap<String, List<String>> map = new HashMap<>();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String userFolder = "C:/uploads/" + userDetails.getUsername();
-        File startDir;
-        try {
-            startDir = new File(userFolder);
-            getFileNames(map, startDir, null);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return null;
-        }
-
-        return map;
-    }
-
-    private boolean authPath(String path) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return path.substring(0, userDetails.getUsername().length() + 1).equals(userDetails.getUsername() + "/");
-    }
-
-    public boolean fileExists(String path) {
-        if (authPath(path)) {
-            path = myFolder + path;
-            File file = new File(path);
-            return file.exists();
-        }
-        return false;
+    public FileNames getAllFilenames() {
+        return new FileNames(me());
     }
 
     public File getFileFor(String path) throws FileNotFoundException {
@@ -122,9 +103,74 @@ public class FileService {
             if (!file.exists())
                 throw new FileNotFoundException();
             else {
-                return file.delete();
+                if (file.delete()) {
+                    Optional<SharedFile> sharedFile = sharedFilesRepository.findSharedFileByPath(path);
+                    if (sharedFile.isPresent()) {
+                        SharedFile realFile = sharedFile.get();
+                        realFile.delete();
+                        sharedFilesRepository.delete(realFile);
+                    }
+                    return true;
+                }
             }
         }
         return false;
+    }
+
+    public void unShareFile(String filePath, String email) throws EntityNotFoundException {
+        SharedFile file = sharedFilesRepository.findSharedFileByPathOrError(filePath);
+
+        if (email.equals("")) {
+            if (file.getOwner().equals(me().getEmail())) {
+                file.delete();
+                sharedFilesRepository.delete(file);
+            } else {
+                if (me().getShared().contains(file)) {
+                    me().removeSharedFile(file);
+                    userRepository.save(me());
+                }
+            }
+        } else {
+            if (file.getOwner().equals(me().getEmail())) {
+                Optional<Student> user = userRepository.getStudentByEmail(email);
+                if (user.isPresent()) {
+                    user.get().removeSharedFile(file);
+                    userRepository.save(user.get());
+                } else
+                    throw new EntityNotFoundException();
+            }
+        }
+
+        if (file.getSharedStudent().size() == 1) {
+            me().removeSharedFile(file);
+            sharedFilesRepository.delete(file);
+        }
+    }
+
+    public void shareFile(String filePath, String email) throws FileNotFoundException {
+        Optional<Student> optionalShareUser = userRepository.getStudentByEmail(email);
+        if (optionalShareUser.isEmpty())
+            throw new EntityNotFoundException();
+        if (fileExists(filePath))
+            userRepository.shareFile(optionalShareUser.get(), filePath);
+        else
+            throw new FileNotFoundException();
+    }
+
+    public Set getSharedWith(String filePath) {
+        if (fileExists(filePath)) {
+            return sharedFilesRepository.findSharedFileByPathOrError(filePath).getSharedStudent();
+        } else
+            throw new NoSuchElementException();
+    }
+
+    public Set<SharedFile> sharedFiles() {
+        Set<SharedFile> sharedFiles = me().getShared();
+        Set<SharedFile> shared = new HashSet<>();
+        for (SharedFile file : sharedFiles) {
+            if (file.getOwner().equals(me().getEmail()))
+                shared.add(file);
+        }
+        return shared;
     }
 }

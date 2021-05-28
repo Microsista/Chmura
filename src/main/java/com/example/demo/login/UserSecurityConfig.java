@@ -61,6 +61,7 @@ public class UserSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/auth/signUp").permitAll()
                 .antMatchers("/api/auth/signIn").permitAll()
                 .antMatchers("/api/auth/signInTest").permitAll()
+                .antMatchers("/swagger-ui.html/**").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -1,11 +1,11 @@
 package com.example.demo.student;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -21,18 +21,22 @@ public class Student {
             strategy = GenerationType.SEQUENCE,
             generator = "student_sequence"
     )
+    @JsonIgnore
     private Long id;
     private String username;
     private String email;
+    @JsonIgnore
     private String password;
+    @JsonIgnore
     private LocalDate dob;
 
-
+    @JsonIgnore
     @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<SharedFile> shared = new HashSet<>();
 
     // Don't store it in the database, mark it as being derived from other fields.
     @Transient
+    @JsonIgnore
     private Integer age;
 
     public Student() {
@@ -57,7 +61,7 @@ public class Student {
         shared.add(file);
     }
 
-    public void deleteSharedFile(SharedFile file) {
+    public void removeSharedFile(SharedFile file) {
         shared.remove(file);
     }
 
