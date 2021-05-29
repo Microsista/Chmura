@@ -106,13 +106,16 @@ const App = () => {
 
             // utworz tablice z iloscia elementow rowna ilosci lokalizacji
             var sizes = new Array(k);
+            var locations = new Array(k);
 
             // dla kazdej z tych lokalizacji utworz tablice o rozmiarze tyle ile jest w niej plikow
             for (var i in fetchedData.myFiles) {
                 sizes[i] = new Array(fetchedData.myFiles[i].length);
+                locations[i] = new Array(fetchedData.myFiles[i].length);
             }
             for (var i in fetchedData.sharedFiles) {
                 sizes[i] = new Array(fetchedData.sharedFiles[i].length);
+                locations[i] = new Array(fetchedData.sharedFiles[i].length);
             }
 
             ///////////////////////////////////////////////////
@@ -142,6 +145,7 @@ const App = () => {
                             options2
                         );
                         sizes[i][j] = resp.headers.get("content-length") / 1000;
+                        locations[i][j] = "[0.0, 0.0]";
                     }
                 }
                 return functionWithPromise(dataentry);
@@ -174,7 +178,7 @@ const App = () => {
                                         arr,
                                         data[i][j],
                                         sizes[i][j],
-                                        "",
+                                        locations[i][j],
                                         data[i][j],
                                         i
                                     );

@@ -36,9 +36,11 @@ const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
 
     if (!file.endsWith("txt")) {
         var oReq = new XMLHttpRequest();
+        const words = fileOwner.split("/");
+        var owner = words[0];
         oReq.open(
             "GET",
-            `http://localhost:8080/api/fileDrop/download?file_path=${fileOwner}/${file}`,
+            `http://localhost:8080/api/fileDrop/download?file_path=${owner}/${file}`,
             true
         );
         oReq.setRequestHeader("Authorization", token);
@@ -77,9 +79,13 @@ const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
     const useComponentDidMount = (func) => useEffect(func, []);
 
     useComponentWillMount(() => {
-        console.log(`${fileOwner}/${file}`);
+        const words = file.split("/");
+        var lfile;
+        if (words.length > 1) lfile = words[1];
+        else lfile = words[0];
+        console.log(fileOwner + lfile);
         const rawResponse = fetch(
-            `http://localhost:8080/api/fileDrop/download?file_path=${fileOwner}/${file}`,
+            `http://localhost:8080/api/fileDrop/download?file_path=${fileOwner}/${lfile}`,
             requestOptions
         )
             .then((response) => {
