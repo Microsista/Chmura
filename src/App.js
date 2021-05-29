@@ -210,7 +210,7 @@ const App = () => {
                                             lArr,
                                             data[i][j],
                                             sizes[i][j],
-                                            "",
+                                            locations[i][j],
                                             folderName + "/" + data[i][j],
                                             i
                                         );
@@ -226,7 +226,7 @@ const App = () => {
                                         arr,
                                         data[i][j],
                                         sizes[i][j],
-                                        "",
+                                        locations[i][j],
                                         data[i][j],
                                         i
                                     );
@@ -365,13 +365,16 @@ const App = () => {
 
                 // utworz tablice z iloscia elementow rowna ilosci lokalizacji
                 var sizes = new Array(k);
+                var locations = new Array(k);
 
                 // dla kazdej z tych lokalizacji utworz tablice o rozmiarze tyle ile jest w niej plikow
                 for (var i in fetchedData.myFiles) {
                     sizes[i] = new Array(fetchedData.myFiles[i].length);
+                    locations[i] = new Array(fetchedData.myFiles[i].length);
                 }
                 for (var i in fetchedData.sharedFiles) {
                     sizes[i] = new Array(fetchedData.sharedFiles[i].length);
+                    locations[i] = new Array(fetchedData.sharedFiles[i].length);
                 }
 
                 ///////////////////////////////////////////////////
@@ -402,6 +405,7 @@ const App = () => {
                             );
                             sizes[i][j] =
                                 resp.headers.get("content-length") / 1000;
+                            locations[i][j] = "[0.0, 0.0]";
                         }
                     }
                     return functionWithPromise(dataentry);
@@ -433,12 +437,12 @@ const App = () => {
                                             arr,
                                             data[i][j],
                                             sizes[i][j],
-                                            "",
+                                            locations[i][j],
                                             data[i][j],
                                             i
                                         );
                                     }
-                                else {
+                                else if (i.startsWith(username)) {
                                     var folderName = i.substr(
                                         username.length + 1,
                                         i.length - 1
@@ -465,13 +469,27 @@ const App = () => {
                                                 lArr,
                                                 data[i][j],
                                                 sizes[i][j],
-                                                "",
+                                                locations[i][j],
                                                 folderName + "/" + data[i][j],
                                                 i
                                             );
                                         folders.push(folderLocation);
                                     }
                                     arr.push(lArr);
+                                } else {
+                                    // if this file is shared
+                                    for (var j = 0; j < data[i].length; j++) {
+                                        console.log("i=" + i + ", j=" + j);
+                                        console.log(sizes[i][j]);
+                                        checkSubfolder(
+                                            arr,
+                                            data[i][j],
+                                            sizes[i][j],
+                                            locations[i][j],
+                                            data[i][j],
+                                            i
+                                        );
+                                    }
                                 }
                             }
                         });
@@ -691,13 +709,16 @@ const App = () => {
 
         // utworz tablice z iloscia elementow rowna ilosci lokalizacji
         var sizes = new Array(k);
+        var locations = new Array(k);
 
         // dla kazdej z tych lokalizacji utworz tablice o rozmiarze tyle ile jest w niej plikow
         for (var i in fetchedData.myFiles) {
             sizes[i] = new Array(fetchedData.myFiles[i].length);
+            locations[i] = new Array(fetchedData.myFiles[i].length);
         }
         for (var i in fetchedData.sharedFiles) {
             sizes[i] = new Array(fetchedData.sharedFiles[i].length);
+            locations[i] = new Array(fetchedData.sharedFiles[i].length);
         }
 
         ///////////////////////////////////////////////////
@@ -745,6 +766,7 @@ const App = () => {
                         options2
                     );
                     sizes[i][j] = resp.headers.get("content-length") / 1000;
+                    locations[i][j] = "[0.0, 0.0]";
                 }
             }
             return functionWithPromise(dataentry);
@@ -776,12 +798,12 @@ const App = () => {
                                     arr,
                                     data[i][j],
                                     sizes[i][j],
-                                    "",
+                                    locations[i][j],
                                     data[i][j],
                                     i
                                 );
                             }
-                        else {
+                        else if (i.startsWith(username)) {
                             var folderName = i.substr(
                                 username.length + 1,
                                 i.length - 1
@@ -808,13 +830,27 @@ const App = () => {
                                         lArr,
                                         data[i][j],
                                         sizes[i][j],
-                                        "",
+                                        locations[i][j],
                                         folderName + "/" + data[i][j],
                                         i
                                     );
                                 folders.push(folderLocation);
                             }
                             arr.push(lArr);
+                        } else {
+                            // if this file is shared
+                            for (var j = 0; j < data[i].length; j++) {
+                                console.log("i=" + i + ", j=" + j);
+                                console.log(sizes[i][j]);
+                                checkSubfolder(
+                                    arr,
+                                    data[i][j],
+                                    sizes[i][j],
+                                    locations[i][j],
+                                    data[i][j],
+                                    i
+                                );
+                            }
                         }
                     }
                 });
