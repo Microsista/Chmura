@@ -4,13 +4,64 @@ import { useState, useEffect, useRef } from "react";
 //import { remote} from 'remote-file-size';
 //import { stat } from "react-native-fs";
 
-const Child = ({ id, file, backup, username, onGoBack }) => {
+const Child = ({ id, file, backup, username, onGoBack, token }) => {
     const [data, setData] = useState();
     const [size, setSize] = useState();
+    const inputEl = useRef(null);
+
+    // useEffect(() => {
+    //     const ctx = inputEl.canvas.getContext("2d");
+
+    //     var imageObj1 = new Image();
+    //     imageObj1.src = `http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`;
+
+    //     const src = `http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`;
+    //     const options = {
+    //         method: "GET",
+    //         headers: {
+    //             Authorization: token,
+    //         },
+    //     };
+    //     var test;
+    //     fetch(src, options)
+    //         .then((res) => res.blob())
+    //         .then((blob) => {
+    //             imageObj1.src = URL.createObjectURL(blob);
+    //         });
+
+    //     imageObj1.onload = () => {
+    //         ctx.drawImage(imageObj1, 0, 0);
+    //     };
+    // });
+
+    if (!file.endsWith("txt")) {
+        var oReq = new XMLHttpRequest();
+        oReq.open(
+            "GET",
+            `http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`,
+            true
+        );
+        oReq.setRequestHeader("Authorization", token);
+        // use multiple setRequestHeader calls to set multiple values
+        oReq.responseType = "arraybuffer";
+        oReq.onload = function (oEvent) {
+            var arrayBuffer = oReq.response; // Note: not oReq.responseText
+            if (arrayBuffer) {
+                var u8 = new Uint8Array(arrayBuffer);
+                var b64encoded = btoa(String.fromCharCode.apply(null, u8));
+                var mimetype = "image/png"; // or whatever your image mime type is
+                document.getElementById("myimage").src =
+                    "data:" + mimetype + ";base64," + b64encoded;
+            }
+        };
+        oReq.send(null);
+    }
 
     const requestOptions = {
         method: "GET",
-        credentials: "include",
+        headers: {
+            Authorization: token,
+        },
     };
 
     const useComponentWillMount = (func) => {
@@ -26,6 +77,7 @@ const Child = ({ id, file, backup, username, onGoBack }) => {
     const useComponentDidMount = (func) => useEffect(func, []);
 
     useComponentWillMount(() => {
+        console.log(`${username}/${file}`);
         const rawResponse = fetch(
             `http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`,
             requestOptions
@@ -43,20 +95,21 @@ const Child = ({ id, file, backup, username, onGoBack }) => {
     });
 
     const onBack = () => {
-        onGoBack()
-    }
+        onGoBack();
+    };
 
     return (
         <>
-            <Link to="/" onClick={onBack}>Go Back</Link>
+            <Link to="/" onClick={onBack}>
+                Go Back
+            </Link>
             <div>File path: {file}</div>
             <div>File size: {size / 1000} KB</div>
             {file.endsWith("txt") ? (
                 data
             ) : (
-                <img
-                    src={`http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`}
-                />
+                <img id="myimage"></img>
+                //<canvas ref={inputEl} width={300} height={300}></canvas>
             )}
         </>
     );

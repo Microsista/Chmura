@@ -73,91 +73,164 @@ const App = () => {
             setUsername(username);
 
             var mystring = "Bearer " + mytoken;
-            console.log(mystring);
+            setToken(mystring);
 
             const options = {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    Authorization: mystring,
+                },
+            };
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Initial fetch of the data to iterate over and get file sizes.
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            var fetchedData;
+
+            await fetch("http://localhost:8080/api/fileDrop", options)
+                .then((response) => response.json())
+                .then((outerdata) => {
+                    fetchedData = outerdata;
+                });
+
+            // get array size///////////////////////////////
+
+            var k = 0;
+            // ile jest lokalizacji moich i wspoldzielonych?
+            for (var i in fetchedData.myFiles) k++;
+
+            for (var i in fetchedData.sharedFiles) k++;
+
+            // utworz tablice z iloscia elementow rowna ilosci lokalizacji
+            var sizes = new Array(k);
+
+            // dla kazdej z tych lokalizacji utworz tablice o rozmiarze tyle ile jest w niej plikow
+            for (var i in fetchedData.myFiles) {
+                sizes[i] = new Array(fetchedData.myFiles[i].length);
+            }
+            for (var i in fetchedData.sharedFiles) {
+                sizes[i] = new Array(fetchedData.sharedFiles[i].length);
+            }
+
+            ///////////////////////////////////////////////////
+
+            const options2 = {
                 method: "GET",
                 headers: {
                     Authorization: mystring,
                 },
             };
 
-            // Initial fetch of the data to iterate over and get file sizes.
-            var myData;
-            await fetch("http://localhost:8080/api/fileDrop", options)
-                .then((response) => response.json())
-                .then((data) => {
-                    myData = data;
-                });
+            const functionWithPromise = (item) => {
+                //a function that returns a promise
+                return Promise.resolve("ok");
+            };
 
-            var k = 0;
-            console.log(myData);
-            for (var i in myData) k++;
-            // Iterate over the data and retrieve file sizes.
-            var sizes = new Array(k);
-            for (var i in myData) sizes[i] = new Array(myData[i].length);
-            for (var i in myData) {
-                for (var j = 0; j < myData[i].length; j++) {
-                    var resp = await fetch(
-                        `http://localhost:8080/api/fileDrop/download?file_path=${username}/${myData[i][j]}`,
-                        options
-                    );
-                    sizes[i][j] = resp.headers.get("content-length") / 1000;
-                    console.log(sizes[i][j]);
+            const anAsyncFunction = async (props) => {
+                var folderName = props[0];
+                var dataentry = props[1];
+
+                // console.log(folderName);
+                // console.log("equal?");
+
+                // console.log(username);
+                // if (folderName !== username) {
+                //     var fn = folderName.substr(
+                //         username.length + 1,
+                //         folderName.length - 1
+                //     );
+                //     dataentry = fn + dataentry;
+                // }
+                //console.log(dataentry);
+
+                var keys = Object.keys(dataentry);
+
+                for (var i in dataentry) {
+                    for (var j = 0; j < dataentry[i].length; j++) {
+                        // console.log(keys);
+                        // console.log(i);
+                        // console.log(keys[i]);
+                        // console.log(`${i}/${dataentry[i][j]}`);
+
+                        var resp = await fetch(
+                            `http://localhost:8080/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
+                            options2
+                        );
+                        sizes[i][j] = resp.headers.get("content-length") / 1000;
+                    }
                 }
-            }
+                return functionWithPromise(dataentry);
+            };
+
+            const promises = [];
+            Object.entries(fetchedData).map((dataentry) => {
+                promises.push(anAsyncFunction(dataentry));
+            });
+            await Promise.all(promises).then(() => {
+                console.log(sizes);
+            });
 
             var arr = [];
             var folders = [];
             await fetch("http://localhost:8080/api/fileDrop", options)
                 .then((response) => response.json())
-                .then((data) => {
-                    for (var i in data) {
-                        var folderName = i.substr(
-                            username.length + 1,
-                            i.length - 1
-                        );
-                        if (i === username)
-                            // if this is main directory
-                            for (var j = 0; j < data[i].length; j++)
-                                checkSubfolder(
-                                    arr,
-                                    data[i][j],
-                                    sizes[i][j],
-                                    "",
-                                    data[i][j]
-                                );
-                        else {
-                            // if this is a subdirectory
-                            var lArr = [];
-                            if (!folders.includes(folderName))
-                                lArr.push(
-                                    fileDesc(
-                                        folderName,
-                                        0,
-                                        "",
-                                        "",
-                                        folderName,
-                                        "dir",
-                                        "dir"
-                                    )
-                                );
-                            for (var j = 0; j < data[i].length; j++) {
-                                var folderLocation =
-                                    username + "/" + folderName;
-                                if (i.startsWith(folderLocation))
+                .then((outerdata) => {
+                    Object.entries(outerdata).map((dat) => {
+                        var data = dat[1];
+                        //console.log(data);
+                        for (var i in data) {
+                            if (i === username)
+                                // if this is main directory
+                                for (var j = 0; j < data[i].length; j++) {
+                                    console.log("i=" + i + ", j=" + j);
+                                    console.log(sizes[i][j]);
                                     checkSubfolder(
-                                        lArr,
+                                        arr,
                                         data[i][j],
                                         sizes[i][j],
                                         "",
-                                        folderName + "/" + data[i][j]
+                                        data[i][j]
                                     );
-                                folders.push(folderLocation);
+                                }
+                            else {
+                                var folderName = i.substr(
+                                    username.length + 1,
+                                    i.length - 1
+                                );
+                                // if this is a subdirectory
+                                var lArr = [];
+                                if (!folders.includes(folderName))
+                                    lArr.push(
+                                        fileDesc(
+                                            folderName,
+                                            0,
+                                            "",
+                                            "",
+                                            folderName,
+                                            "dir",
+                                            "dir"
+                                        )
+                                    );
+                                for (var j = 0; j < data[i].length; j++) {
+                                    var folderLocation =
+                                        username + "/" + folderName;
+                                    if (i.startsWith(folderLocation))
+                                        checkSubfolder(
+                                            lArr,
+                                            data[i][j],
+                                            sizes[i][j],
+                                            "",
+                                            folderName + "/" + data[i][j]
+                                        );
+                                    folders.push(folderLocation);
+                                }
+                                arr.push(lArr);
                             }
-                            arr.push(lArr);
                         }
-                    }
+                    });
                 });
 
             setFiles(arr);
@@ -171,6 +244,7 @@ const App = () => {
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
+                Authorization: token,
                 // credentials: "include",
             },
         };
@@ -188,26 +262,30 @@ const App = () => {
     };
 
     const onLogOut = async () => {
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-            //credentials: "include",
-        };
+        var mytoken;
+        // await fetch("http://localhost:8080/api/auth/signIn", requestOptions)
+        //     .then((response) => response.json())
+        //     .then((data) => {
+        //         mytoken = data.token;
+        //     });
 
-        const rawResponse = await fetch(
-            "http://localhost:8080/api/auth/logOut",
-            requestOptions
-        );
+        // var mystring = "Bearer " + mytoken;
+        setToken("");
+        // const requestOptions = {
+        //     method: "GET",
+        // };
 
-        if (rawResponse.status === 200) {
-            setRedirect(false);
-            setLoggedin(false);
+        // const rawResponse = await fetch(
+        //     "http://localhost:8080/api/auth/logOut",
+        //     requestOptions
+        // );
 
-            setFiles([]);
-        } else alert("Cannot log out");
+        // if (rawResponse.status === 200) {
+        setRedirect(false);
+        setLoggedin(false);
+
+        setFiles([]);
+        // } else alert("Cannot log out");
     };
 
     const onSignUp = async (username, email, password, dob) => {
@@ -248,6 +326,13 @@ const App = () => {
                 //credentials: "include",
             };
 
+            var mytoken;
+            await fetch("http://localhost:8080/api/auth/signIn", requestOptions)
+                .then((response) => response.json())
+                .then((data) => {
+                    mytoken = data.token;
+                });
+
             const rawResponse = await fetch(
                 "http://localhost:8080/api/auth/signIn",
                 requestOptions
@@ -259,88 +344,166 @@ const App = () => {
                 setLoggedin(true);
                 setUsername(username);
 
-                // Inlined refresh function for reliability
+                var mystring = "Bearer " + mytoken;
+                setToken(mystring);
+
                 const options = {
                     method: "GET",
-                    //credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        Authorization: mystring,
+                    },
                 };
 
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Initial fetch of the data to iterate over and get file sizes.
-                var myData;
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                var fetchedData;
+
                 await fetch("http://localhost:8080/api/fileDrop", options)
                     .then((response) => response.json())
-                    .then((data) => {
-                        myData = data;
+                    .then((outerdata) => {
+                        fetchedData = outerdata;
                     });
 
+                // get array size///////////////////////////////
+
                 var k = 0;
-                console.log();
-                for (var i in myData) k++;
-                // Iterate over the data and retrieve file sizes.
+                // ile jest lokalizacji moich i wspoldzielonych?
+                for (var i in fetchedData.myFiles) k++;
+
+                for (var i in fetchedData.sharedFiles) k++;
+
+                // utworz tablice z iloscia elementow rowna ilosci lokalizacji
                 var sizes = new Array(k);
-                for (var i in myData) sizes[i] = new Array(myData[i].length);
-                for (var i in myData) {
-                    for (var j = 0; j < myData[i].length; j++) {
-                        var resp = await fetch(
-                            `http://localhost:8080/api/fileDrop/download?file_path=${username}/${myData[i][j]}`,
-                            options
-                        );
-                        sizes[i][j] = resp.headers.get("content-length") / 1000;
-                        console.log(sizes[i][j]);
-                    }
+
+                // dla kazdej z tych lokalizacji utworz tablice o rozmiarze tyle ile jest w niej plikow
+                for (var i in fetchedData.myFiles) {
+                    sizes[i] = new Array(fetchedData.myFiles[i].length);
                 }
+                for (var i in fetchedData.sharedFiles) {
+                    sizes[i] = new Array(fetchedData.sharedFiles[i].length);
+                }
+
+                ///////////////////////////////////////////////////
+
+                const options2 = {
+                    method: "GET",
+                    headers: {
+                        Authorization: mystring,
+                    },
+                };
+
+                const functionWithPromise = (item) => {
+                    //a function that returns a promise
+                    return Promise.resolve("ok");
+                };
+
+                const anAsyncFunction = async (props) => {
+                    var folderName = props[0];
+                    var dataentry = props[1];
+
+                    // console.log(folderName);
+                    // console.log("equal?");
+
+                    // console.log(username);
+                    // if (folderName !== username) {
+                    //     var fn = folderName.substr(
+                    //         username.length + 1,
+                    //         folderName.length - 1
+                    //     );
+                    //     dataentry = fn + dataentry;
+                    // }
+                    //console.log(dataentry);
+
+                    var keys = Object.keys(dataentry);
+
+                    for (var i in dataentry) {
+                        for (var j = 0; j < dataentry[i].length; j++) {
+                            // console.log(keys);
+                            // console.log(i);
+                            // console.log(keys[i]);
+                            // console.log(`${i}/${dataentry[i][j]}`);
+
+                            var resp = await fetch(
+                                `http://localhost:8080/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
+                                options2
+                            );
+                            sizes[i][j] =
+                                resp.headers.get("content-length") / 1000;
+                        }
+                    }
+                    return functionWithPromise(dataentry);
+                };
+
+                const promises = [];
+                Object.entries(fetchedData).map((dataentry) => {
+                    promises.push(anAsyncFunction(dataentry));
+                });
+                await Promise.all(promises).then(() => {
+                    console.log(sizes);
+                });
 
                 var arr = [];
                 var folders = [];
                 await fetch("http://localhost:8080/api/fileDrop", options)
                     .then((response) => response.json())
-                    .then((data) => {
-                        for (var i in data) {
-                            var folderName = i.substr(
-                                username.length + 1,
-                                i.length - 1
-                            );
-                            if (i === username)
-                                // if this is main directory
-                                for (var j = 0; j < data[i].length; j++)
-                                    checkSubfolder(
-                                        arr,
-                                        data[i][j],
-                                        sizes[i][j],
-                                        "",
-                                        data[i][j]
-                                    );
-                            else {
-                                // if this is a subdirectory
-                                var lArr = [];
-                                if (!folders.includes(folderName))
-                                    lArr.push(
-                                        fileDesc(
-                                            folderName,
-                                            0,
-                                            "",
-                                            "",
-                                            folderName,
-                                            "dir",
-                                            "dir"
-                                        )
-                                    );
-                                for (var j = 0; j < data[i].length; j++) {
-                                    var folderLocation =
-                                        username + "/" + folderName;
-                                    if (i.startsWith(folderLocation))
+                    .then((outerdata) => {
+                        Object.entries(outerdata).map((dat) => {
+                            var data = dat[1];
+                            //console.log(data);
+                            for (var i in data) {
+                                if (i === username)
+                                    // if this is main directory
+                                    for (var j = 0; j < data[i].length; j++) {
+                                        console.log("i=" + i + ", j=" + j);
+                                        console.log(sizes[i][j]);
                                         checkSubfolder(
-                                            lArr,
+                                            arr,
                                             data[i][j],
                                             sizes[i][j],
                                             "",
-                                            folderName + "/" + data[i][j]
+                                            data[i][j]
                                         );
-                                    folders.push(folderLocation);
+                                    }
+                                else {
+                                    var folderName = i.substr(
+                                        username.length + 1,
+                                        i.length - 1
+                                    );
+                                    // if this is a subdirectory
+                                    var lArr = [];
+                                    if (!folders.includes(folderName))
+                                        lArr.push(
+                                            fileDesc(
+                                                folderName,
+                                                0,
+                                                "",
+                                                "",
+                                                folderName,
+                                                "dir",
+                                                "dir"
+                                            )
+                                        );
+                                    for (var j = 0; j < data[i].length; j++) {
+                                        var folderLocation =
+                                            username + "/" + folderName;
+                                        if (i.startsWith(folderLocation))
+                                            checkSubfolder(
+                                                lArr,
+                                                data[i][j],
+                                                sizes[i][j],
+                                                "",
+                                                folderName + "/" + data[i][j]
+                                            );
+                                        folders.push(folderLocation);
+                                    }
+                                    arr.push(lArr);
                                 }
-                                arr.push(lArr);
                             }
-                        }
+                        });
                     });
 
                 setFiles(arr);
@@ -371,12 +534,14 @@ const App = () => {
     const onDelete = async (id) => {
         // Delete from server
         const found = files.find((x) => x.id == id);
-        console.log(found.address);
+        console.log(`${username}/${found.address}`);
         const options = {
-            method: "GET",
-            //credentials: "include",
+            method: "DELETE",
+            headers: {
+                Authorization: token,
+            },
         };
-        var resp = await fetch(
+        await fetch(
             `http://localhost:8080/api/fileDrop/delete?file_path=${username}/${found.address}`,
             options
         );
@@ -447,7 +612,7 @@ const App = () => {
 
         axios
             .post("http://localhost:8080/api/fileDrop", data, {
-                withCredentials: false,
+                headers: { Authorization: token },
             })
             .then((res) => {
                 refresh();
@@ -506,86 +671,250 @@ const App = () => {
     };
 
     const refresh = async () => {
+        // const options = {
+        //     method: "GET",
+        //     headers: {
+        //         Authorization: token,
+        //     },
+        //     //credentials: "include",
+        // };
+
+        // // Initial fetch of the data to iterate over and get file sizes.
+        // var myData;
+        // await fetch("http://localhost:8080/api/fileDrop", options)
+        //     .then((response) => response.json())
+        //     .then((data) => {
+        //         myData = data;
+        //     });
+
+        // var k = 0;
+        // console.log();
+        // for (var i in myData) k++;
+        // // Iterate over the data and retrieve file sizes.
+        // var sizes = new Array(k);
+        // for (var i in myData) sizes[i] = new Array(myData[i].length);
+        // for (var i in myData) {
+        //     for (var j = 0; j < myData[i].length; j++) {
+        //         var resp = await fetch(
+        //             `http://localhost:8080/api/fileDrop/download?file_path=${username}/${myData[i][j]}`,
+        //             options
+        //         );
+        //         sizes[i][j] = resp.headers.get("content-length") / 1000;
+        //         console.log(sizes[i][j]);
+        //     }
+        // }
+
+        // var arr = [];
+        // var folders = [];
+        // await fetch("http://localhost:8080/api/fileDrop", options)
+        //     .then((response) => response.json())
+        //     .then((data) => {
+        //         for (var i in data) {
+        //             var folderName = i.substr(
+        //                 username.length + 1,
+        //                 i.length - 1
+        //             );
+        //             if (i === username)
+        //                 // if this is main directory
+        //                 for (var j = 0; j < data[i].length; j++)
+        //                     checkSubfolder(
+        //                         arr,
+        //                         data[i][j],
+        //                         sizes[i][j],
+        //                         "",
+        //                         data[i][j]
+        //                     );
+        //             else {
+        //                 // if this is a subdirectory
+        //                 var lArr = [];
+        //                 if (!folders.includes(folderName))
+        //                     lArr.push(
+        //                         fileDesc(
+        //                             folderName,
+        //                             0,
+        //                             "",
+        //                             "",
+        //                             folderName,
+        //                             "dir",
+        //                             "dir"
+        //                         )
+        //                     );
+        //                 for (var j = 0; j < data[i].length; j++) {
+        //                     var folderLocation = username + "/" + folderName;
+        //                     if (i.startsWith(folderLocation))
+        //                         checkSubfolder(
+        //                             lArr,
+        //                             data[i][j],
+        //                             sizes[i][j],
+        //                             "",
+        //                             folderName + "/" + data[i][j]
+        //                         );
+        //                     folders.push(folderLocation);
+        //                 }
+        //                 arr.push(lArr);
+        //             }
+        //         }
+        //     });
+
+        // setFiles(arr);
+        // setBackup(arr);
+
         const options = {
             method: "GET",
-            //credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: token,
+            },
         };
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Initial fetch of the data to iterate over and get file sizes.
-        var myData;
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        var fetchedData;
+
         await fetch("http://localhost:8080/api/fileDrop", options)
             .then((response) => response.json())
-            .then((data) => {
-                myData = data;
+            .then((outerdata) => {
+                fetchedData = outerdata;
             });
 
+        // get array size///////////////////////////////
+
         var k = 0;
-        console.log();
-        for (var i in myData) k++;
-        // Iterate over the data and retrieve file sizes.
+        // ile jest lokalizacji moich i wspoldzielonych?
+        for (var i in fetchedData.myFiles) k++;
+
+        for (var i in fetchedData.sharedFiles) k++;
+
+        // utworz tablice z iloscia elementow rowna ilosci lokalizacji
         var sizes = new Array(k);
-        for (var i in myData) sizes[i] = new Array(myData[i].length);
-        for (var i in myData) {
-            for (var j = 0; j < myData[i].length; j++) {
-                var resp = await fetch(
-                    `http://localhost:8080/api/fileDrop/download?file_path=${username}/${myData[i][j]}`,
-                    options
-                );
-                sizes[i][j] = resp.headers.get("content-length") / 1000;
-                console.log(sizes[i][j]);
-            }
+
+        // dla kazdej z tych lokalizacji utworz tablice o rozmiarze tyle ile jest w niej plikow
+        for (var i in fetchedData.myFiles) {
+            sizes[i] = new Array(fetchedData.myFiles[i].length);
         }
+        for (var i in fetchedData.sharedFiles) {
+            sizes[i] = new Array(fetchedData.sharedFiles[i].length);
+        }
+
+        ///////////////////////////////////////////////////
+
+        const options2 = {
+            method: "GET",
+            headers: {
+                Authorization: token,
+            },
+        };
+
+        const functionWithPromise = (item) => {
+            //a function that returns a promise
+            return Promise.resolve("ok");
+        };
+
+        const anAsyncFunction = async (props) => {
+            var folderName = props[0];
+            var dataentry = props[1];
+
+            // console.log(folderName);
+            // console.log("equal?");
+
+            // console.log(username);
+            // if (folderName !== username) {
+            //     var fn = folderName.substr(
+            //         username.length + 1,
+            //         folderName.length - 1
+            //     );
+            //     dataentry = fn + dataentry;
+            // }
+            //console.log(dataentry);
+
+            var keys = Object.keys(dataentry);
+
+            for (var i in dataentry) {
+                for (var j = 0; j < dataentry[i].length; j++) {
+                    // console.log(keys);
+                    // console.log(i);
+                    // console.log(keys[i]);
+                    // console.log(`${i}/${dataentry[i][j]}`);
+
+                    var resp = await fetch(
+                        `http://localhost:8080/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
+                        options2
+                    );
+                    sizes[i][j] = resp.headers.get("content-length") / 1000;
+                }
+            }
+            return functionWithPromise(dataentry);
+        };
+
+        const promises = [];
+        Object.entries(fetchedData).map((dataentry) => {
+            promises.push(anAsyncFunction(dataentry));
+        });
+        await Promise.all(promises).then(() => {
+            console.log(sizes);
+        });
 
         var arr = [];
         var folders = [];
         await fetch("http://localhost:8080/api/fileDrop", options)
             .then((response) => response.json())
-            .then((data) => {
-                for (var i in data) {
-                    var folderName = i.substr(
-                        username.length + 1,
-                        i.length - 1
-                    );
-                    if (i === username)
-                        // if this is main directory
-                        for (var j = 0; j < data[i].length; j++)
-                            checkSubfolder(
-                                arr,
-                                data[i][j],
-                                sizes[i][j],
-                                "",
-                                data[i][j]
-                            );
-                    else {
-                        // if this is a subdirectory
-                        var lArr = [];
-                        if (!folders.includes(folderName))
-                            lArr.push(
-                                fileDesc(
-                                    folderName,
-                                    0,
-                                    "",
-                                    "",
-                                    folderName,
-                                    "dir",
-                                    "dir"
-                                )
-                            );
-                        for (var j = 0; j < data[i].length; j++) {
-                            var folderLocation = username + "/" + folderName;
-                            if (i.startsWith(folderLocation))
+            .then((outerdata) => {
+                Object.entries(outerdata).map((dat) => {
+                    var data = dat[1];
+                    //console.log(data);
+                    for (var i in data) {
+                        if (i === username)
+                            // if this is main directory
+                            for (var j = 0; j < data[i].length; j++) {
+                                console.log("i=" + i + ", j=" + j);
+                                console.log(sizes[i][j]);
                                 checkSubfolder(
-                                    lArr,
+                                    arr,
                                     data[i][j],
                                     sizes[i][j],
                                     "",
-                                    folderName + "/" + data[i][j]
+                                    data[i][j]
                                 );
-                            folders.push(folderLocation);
+                            }
+                        else {
+                            var folderName = i.substr(
+                                username.length + 1,
+                                i.length - 1
+                            );
+                            // if this is a subdirectory
+                            var lArr = [];
+                            if (!folders.includes(folderName))
+                                lArr.push(
+                                    fileDesc(
+                                        folderName,
+                                        0,
+                                        "",
+                                        "",
+                                        folderName,
+                                        "dir",
+                                        "dir"
+                                    )
+                                );
+                            for (var j = 0; j < data[i].length; j++) {
+                                var folderLocation =
+                                    username + "/" + folderName;
+                                if (i.startsWith(folderLocation))
+                                    checkSubfolder(
+                                        lArr,
+                                        data[i][j],
+                                        sizes[i][j],
+                                        "",
+                                        folderName + "/" + data[i][j]
+                                    );
+                                folders.push(folderLocation);
+                            }
+                            arr.push(lArr);
                         }
-                        arr.push(lArr);
                     }
-                }
+                });
             });
 
         setFiles(arr);
@@ -830,6 +1159,7 @@ const App = () => {
                             backup={backup}
                             username={username}
                             onGoBack={onGoBack}
+                            token={token}
                         ></Child>
                     )}
                 ></Route>
