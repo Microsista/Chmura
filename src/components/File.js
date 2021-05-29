@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import Popup from "reactjs-popup";
 
 const File = ({
     file,
@@ -23,6 +24,8 @@ const File = ({
     const [edit, setEdit] = useState(false);
     const [id, setId] = useState(0);
     const [value, setValue] = useState("");
+    const [input, setInput] = useState("");
+
     const onRenameLocal = (idl) => {
         setEdit(!edit);
         onRename(value, id);
@@ -31,6 +34,14 @@ const File = ({
     const onRenameLocal2 = (value, id) => {
         setValue(value);
         setId(id);
+    };
+
+    const onShareLocal = (lid) => {
+        onShare(lid, input);
+    };
+
+    const onShareLocal2 = (input, lid) => {
+        setInput(input);
     };
 
     return (
@@ -86,23 +97,55 @@ const File = ({
                 </div>
 
                 <div className="item">
-                    {file.type === "dir" || Array.isArray(file) ? null : <>
-                    <FaFileSignature
-                        style={{ color: "black", cursor: "pointer" }}
-                        onClick={() => onRenameLocal(file.id)}
-                    />
-                    <FaShare
-                        style={{ color: "black", cursor: "pointer" }}
-                        onClick={() => onShare(file.id)}
-                    />
-                    <FaTimes
-                        style={{ color: "red", cursor: "pointer" }}
-                        onClick={() => {
-                            onDelete(file.id);
-                        }}
-                    />
-                    </>
-                    }
+                    {file.type === "dir" || Array.isArray(file) ? null : (
+                        <>
+                            <FaFileSignature
+                                style={{ color: "black", cursor: "pointer" }}
+                                onClick={() => onRenameLocal(file.id)}
+                            />
+
+                            <Popup
+                                open={false}
+                                trigger={
+                                    <button class="btn2">
+                                        <FaShare
+                                            style={{
+                                                color: "black",
+                                                cursor: "pointer",
+                                            }}
+                                        />
+                                    </button>
+                                }
+                                position="right center"
+                            >
+                                <div>
+                                    Share with who?
+                                    <input
+                                        type="text"
+                                        onChange={(e) =>
+                                            onShareLocal2(
+                                                e.target.value,
+                                                file.id
+                                            )
+                                        }
+                                    />
+                                    <button
+                                        className="deleteButton"
+                                        onClick={() => onShareLocal(file.id)}
+                                    >
+                                        Share
+                                    </button>
+                                </div>
+                            </Popup>
+
+                            <FaTimes
+                                style={{ color: "red", cursor: "pointer" }}
+                                onClick={() => {
+                                    onDelete(file.id);
+                                }}
+                            />
+                        </>
+                    )}
                 </div>
             </h3>
         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 //import { remote} from 'remote-file-size';
 //import { stat } from "react-native-fs";
 
-const Child = ({ id, file, backup, username, onGoBack, token }) => {
+const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
     const [data, setData] = useState();
     const [size, setSize] = useState();
     const inputEl = useRef(null);
@@ -38,7 +38,7 @@ const Child = ({ id, file, backup, username, onGoBack, token }) => {
         var oReq = new XMLHttpRequest();
         oReq.open(
             "GET",
-            `http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`,
+            `http://localhost:8080/api/fileDrop/download?file_path=${fileOwner}/${file}`,
             true
         );
         oReq.setRequestHeader("Authorization", token);
@@ -77,9 +77,9 @@ const Child = ({ id, file, backup, username, onGoBack, token }) => {
     const useComponentDidMount = (func) => useEffect(func, []);
 
     useComponentWillMount(() => {
-        console.log(`${username}/${file}`);
+        console.log(`${fileOwner}/${file}`);
         const rawResponse = fetch(
-            `http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`,
+            `http://localhost:8080/api/fileDrop/download?file_path=${fileOwner}/${file}`,
             requestOptions
         )
             .then((response) => {

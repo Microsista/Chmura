@@ -133,28 +133,10 @@ const App = () => {
                 var folderName = props[0];
                 var dataentry = props[1];
 
-                // console.log(folderName);
-                // console.log("equal?");
-
-                // console.log(username);
-                // if (folderName !== username) {
-                //     var fn = folderName.substr(
-                //         username.length + 1,
-                //         folderName.length - 1
-                //     );
-                //     dataentry = fn + dataentry;
-                // }
-                //console.log(dataentry);
-
                 var keys = Object.keys(dataentry);
 
                 for (var i in dataentry) {
                     for (var j = 0; j < dataentry[i].length; j++) {
-                        // console.log(keys);
-                        // console.log(i);
-                        // console.log(keys[i]);
-                        // console.log(`${i}/${dataentry[i][j]}`);
-
                         var resp = await fetch(
                             `http://localhost:8080/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
                             options2
@@ -180,7 +162,8 @@ const App = () => {
                 .then((outerdata) => {
                     Object.entries(outerdata).map((dat) => {
                         var data = dat[1];
-                        //console.log(data);
+                        console.log("DATA=");
+                        console.log(data);
                         for (var i in data) {
                             if (i === username)
                                 // if this is main directory
@@ -192,10 +175,11 @@ const App = () => {
                                         data[i][j],
                                         sizes[i][j],
                                         "",
-                                        data[i][j]
+                                        data[i][j],
+                                        i
                                     );
                                 }
-                            else {
+                            else if (i.startsWith(username)) {
                                 var folderName = i.substr(
                                     username.length + 1,
                                     i.length - 1
@@ -223,11 +207,26 @@ const App = () => {
                                             data[i][j],
                                             sizes[i][j],
                                             "",
-                                            folderName + "/" + data[i][j]
+                                            folderName + "/" + data[i][j],
+                                            i
                                         );
                                     folders.push(folderLocation);
                                 }
                                 arr.push(lArr);
+                            } else {
+                                // if this file is shared
+                                for (var j = 0; j < data[i].length; j++) {
+                                    console.log("i=" + i + ", j=" + j);
+                                    console.log(sizes[i][j]);
+                                    checkSubfolder(
+                                        arr,
+                                        data[i][j],
+                                        sizes[i][j],
+                                        "",
+                                        data[i][j],
+                                        i
+                                    );
+                                }
                             }
                         }
                     });
@@ -263,29 +262,13 @@ const App = () => {
 
     const onLogOut = async () => {
         var mytoken;
-        // await fetch("http://localhost:8080/api/auth/signIn", requestOptions)
-        //     .then((response) => response.json())
-        //     .then((data) => {
-        //         mytoken = data.token;
-        //     });
 
-        // var mystring = "Bearer " + mytoken;
         setToken("");
-        // const requestOptions = {
-        //     method: "GET",
-        // };
 
-        // const rawResponse = await fetch(
-        //     "http://localhost:8080/api/auth/logOut",
-        //     requestOptions
-        // );
-
-        // if (rawResponse.status === 200) {
         setRedirect(false);
         setLoggedin(false);
 
         setFiles([]);
-        // } else alert("Cannot log out");
     };
 
     const onSignUp = async (username, email, password, dob) => {
@@ -405,28 +388,10 @@ const App = () => {
                     var folderName = props[0];
                     var dataentry = props[1];
 
-                    // console.log(folderName);
-                    // console.log("equal?");
-
-                    // console.log(username);
-                    // if (folderName !== username) {
-                    //     var fn = folderName.substr(
-                    //         username.length + 1,
-                    //         folderName.length - 1
-                    //     );
-                    //     dataentry = fn + dataentry;
-                    // }
-                    //console.log(dataentry);
-
                     var keys = Object.keys(dataentry);
 
                     for (var i in dataentry) {
                         for (var j = 0; j < dataentry[i].length; j++) {
-                            // console.log(keys);
-                            // console.log(i);
-                            // console.log(keys[i]);
-                            // console.log(`${i}/${dataentry[i][j]}`);
-
                             var resp = await fetch(
                                 `http://localhost:8080/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
                                 options2
@@ -465,7 +430,8 @@ const App = () => {
                                             data[i][j],
                                             sizes[i][j],
                                             "",
-                                            data[i][j]
+                                            data[i][j],
+                                            i
                                         );
                                     }
                                 else {
@@ -496,7 +462,8 @@ const App = () => {
                                                 data[i][j],
                                                 sizes[i][j],
                                                 "",
-                                                folderName + "/" + data[i][j]
+                                                folderName + "/" + data[i][j],
+                                                i
                                             );
                                         folders.push(folderLocation);
                                     }
@@ -550,11 +517,22 @@ const App = () => {
         refresh();
     };
 
-    const onShare = async (id) => {
+    const onShare = async (id, input) => {
+        console.log(id);
+        console.log(input);
         const curFile = files.find((element) => element.id === id);
-
-        console.log(curFile);
-
+        const data = new FormData();
+        console.log(curFile.address);
+        data.append("file_path", username + "/" + curFile.address);
+        data.append("email", input);
+        axios
+            .post(`http://localhost:8080/api/fileDrop/share`, data, {
+                headers: { Authorization: token },
+            })
+            .then((res) => {
+                refresh();
+                console.log(res.statusText);
+            });
         setFiles([...files]);
     };
 
@@ -582,10 +560,15 @@ const App = () => {
     const onOpen = (id) => {
         files.find((file, index, array) => {
             // If we found the file we clicked, and we are in a directory...
-            if (array[0].name == ".." && file.id === id)
+            if (array[0].name == ".." && file.id === id) {
                 setFile(currFolder + "/" + file.name);
-            else if (file.id === id) setFile(file.name);
+            } else if (file.id === id) {
+                setFile(file.name);
+            }
         });
+        const found = files.find((file, index, array) => file.id === id);
+        console.log(found.owner);
+        setFileOwner(found.owner);
         setId(id);
     };
 
@@ -661,104 +644,18 @@ const App = () => {
         };
     };
 
-    const checkSubfolder = (arr, name, size, location, address) => {
+    const checkSubfolder = (arr, name, size, location, address, owner) => {
         if (name.endsWith("txt"))
             arr.push(
-                fileDesc(name, size, location, "", address, "text", "text")
+                fileDesc(name, size, location, owner, address, "text", "text")
             );
         else
-            arr.push(fileDesc(name, size, location, "", address, "img", "img"));
+            arr.push(
+                fileDesc(name, size, location, owner, address, "img", "img")
+            );
     };
 
     const refresh = async () => {
-        // const options = {
-        //     method: "GET",
-        //     headers: {
-        //         Authorization: token,
-        //     },
-        //     //credentials: "include",
-        // };
-
-        // // Initial fetch of the data to iterate over and get file sizes.
-        // var myData;
-        // await fetch("http://localhost:8080/api/fileDrop", options)
-        //     .then((response) => response.json())
-        //     .then((data) => {
-        //         myData = data;
-        //     });
-
-        // var k = 0;
-        // console.log();
-        // for (var i in myData) k++;
-        // // Iterate over the data and retrieve file sizes.
-        // var sizes = new Array(k);
-        // for (var i in myData) sizes[i] = new Array(myData[i].length);
-        // for (var i in myData) {
-        //     for (var j = 0; j < myData[i].length; j++) {
-        //         var resp = await fetch(
-        //             `http://localhost:8080/api/fileDrop/download?file_path=${username}/${myData[i][j]}`,
-        //             options
-        //         );
-        //         sizes[i][j] = resp.headers.get("content-length") / 1000;
-        //         console.log(sizes[i][j]);
-        //     }
-        // }
-
-        // var arr = [];
-        // var folders = [];
-        // await fetch("http://localhost:8080/api/fileDrop", options)
-        //     .then((response) => response.json())
-        //     .then((data) => {
-        //         for (var i in data) {
-        //             var folderName = i.substr(
-        //                 username.length + 1,
-        //                 i.length - 1
-        //             );
-        //             if (i === username)
-        //                 // if this is main directory
-        //                 for (var j = 0; j < data[i].length; j++)
-        //                     checkSubfolder(
-        //                         arr,
-        //                         data[i][j],
-        //                         sizes[i][j],
-        //                         "",
-        //                         data[i][j]
-        //                     );
-        //             else {
-        //                 // if this is a subdirectory
-        //                 var lArr = [];
-        //                 if (!folders.includes(folderName))
-        //                     lArr.push(
-        //                         fileDesc(
-        //                             folderName,
-        //                             0,
-        //                             "",
-        //                             "",
-        //                             folderName,
-        //                             "dir",
-        //                             "dir"
-        //                         )
-        //                     );
-        //                 for (var j = 0; j < data[i].length; j++) {
-        //                     var folderLocation = username + "/" + folderName;
-        //                     if (i.startsWith(folderLocation))
-        //                         checkSubfolder(
-        //                             lArr,
-        //                             data[i][j],
-        //                             sizes[i][j],
-        //                             "",
-        //                             folderName + "/" + data[i][j]
-        //                         );
-        //                     folders.push(folderLocation);
-        //                 }
-        //                 arr.push(lArr);
-        //             }
-        //         }
-        //     });
-
-        // setFiles(arr);
-        // setBackup(arr);
-
         const options = {
             method: "GET",
             headers: {
@@ -876,7 +773,8 @@ const App = () => {
                                     data[i][j],
                                     sizes[i][j],
                                     "",
-                                    data[i][j]
+                                    data[i][j],
+                                    i
                                 );
                             }
                         else {
@@ -907,7 +805,8 @@ const App = () => {
                                         data[i][j],
                                         sizes[i][j],
                                         "",
-                                        folderName + "/" + data[i][j]
+                                        folderName + "/" + data[i][j],
+                                        i
                                     );
                                 folders.push(folderLocation);
                             }
@@ -938,6 +837,8 @@ const App = () => {
     const [currFolder, setCurrFolder] = useState("");
     const [dummy, setDummy] = useState(0);
     const [token, setToken] = useState();
+    const [email, setEmail] = useState();
+    const [fileOwner, setFileOwner] = useState();
 
     useEffect(() => {
         var elements = document.getElementsByClassName("fa");
@@ -1160,6 +1061,7 @@ const App = () => {
                             username={username}
                             onGoBack={onGoBack}
                             token={token}
+                            fileOwner={fileOwner}
                         ></Child>
                     )}
                 ></Route>
