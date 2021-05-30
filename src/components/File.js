@@ -90,13 +90,13 @@ const File = ({
         setInput(input);
     };
 
-    const onShareLocal = (lid) => {
+    const onShareLocal = async (lid) => {
         //onShare(lid, input);
 
         const data = new FormData();
         data.append("file_path", username + "/" + file.address);
         data.append("email", input);
-        axios.post(`http://localhost:8080/api/fileDrop/share`, data, {
+        await axios.post(`http://localhost:8080/api/fileDrop/share`, data, {
             headers: { Authorization: token },
         });
 
@@ -106,12 +106,12 @@ const File = ({
         setState2({ lol: "NANANA" });
     };
 
-    const onUnshareLocal = (lid) => {
+    const onUnshareLocal = async (lid) => {
         console.log(
             `username + "/" + file.address`,
             username + "/" + file.address
         );
-        axios.delete(
+        await axios.delete(
             `http://localhost:8080/api/fileDrop/unshare?file_path=${
                 username + "/" + file.address
             }`,
