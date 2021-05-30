@@ -131,9 +131,16 @@ public class FileService {
             if(file2.exists()){
                 return false;
             }
-            return file.renameTo(file2);
-        } else
-            return false;
+            if(file.renameTo(file2)){
+                SharedFile sharedFile = sharedFilesRepository.findSharedFileByPath(path).orElse(null);
+                if(sharedFile != null){
+                    sharedFile.setFilePath(newPath);
+                    sharedFilesRepository.save(sharedFile);
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     public void unShareFile(String filePath, String email) throws EntityNotFoundException {

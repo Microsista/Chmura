@@ -45,6 +45,10 @@ public class SharedFile {
         return filePath;
     }
 
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
     public String getOwner() {
         return owner;
     }
