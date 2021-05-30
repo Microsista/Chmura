@@ -524,19 +524,64 @@ const App = () => {
                                     }
                                     arr.push(lArr);
                                 } else {
+                                    console.log(
+                                        "##################################################"
+                                    );
+                                    console.log("SHARED FILES:");
                                     // if this file is shared
+
+                                    // for (var j = 0; j < data[i].length; j++) {
+                                    //     console.log("i=" + i + ", j=" + j);
+                                    //     console.log(`data[i][j]`, data[i][j]);
+                                    //     console.log(`sizes[i][j]`, sizes[i][j]);
+                                    //     checkSubfolder(
+                                    //         arr,
+                                    //         data[i][j],
+                                    //         sizes[i][j],
+                                    //         locations[i][j],
+                                    //         data[i][j],
+                                    //         i
+                                    //     );
+                                    // }
+
+                                    var folderName = i;
+                                    // if this is a subdirectory
+                                    var lArr = [];
+                                    if (!folders.includes(folderName))
+                                        lArr.push(
+                                            fileDesc(
+                                                folderName,
+                                                0,
+                                                "",
+                                                "",
+                                                folderName,
+                                                "dir",
+                                                "dir"
+                                            )
+                                        );
                                     for (var j = 0; j < data[i].length; j++) {
-                                        console.log("i=" + i + ", j=" + j);
-                                        console.log(sizes[i][j]);
+                                        var folderLocation =
+                                            username + "/" + folderName;
+                                        console.log(
+                                            `folderLocation`,
+                                            folderLocation
+                                        );
+
                                         checkSubfolder(
-                                            arr,
+                                            lArr,
                                             data[i][j],
                                             sizes[i][j],
                                             locations[i][j],
-                                            data[i][j],
+                                            folderName + "/" + data[i][j],
                                             i
                                         );
+                                        folders.push(folderLocation);
                                     }
+                                    arr.push(lArr);
+
+                                    console.log(
+                                        "##################################################"
+                                    );
                                 }
                             }
                         });
@@ -931,19 +976,61 @@ const App = () => {
                             }
                             arr.push(lArr);
                         } else {
+                            console.log(
+                                "##################################################"
+                            );
+                            console.log("SHARED FILES:");
                             // if this file is shared
+
+                            // for (var j = 0; j < data[i].length; j++) {
+                            //     console.log("i=" + i + ", j=" + j);
+                            //     console.log(`data[i][j]`, data[i][j]);
+                            //     console.log(`sizes[i][j]`, sizes[i][j]);
+                            //     checkSubfolder(
+                            //         arr,
+                            //         data[i][j],
+                            //         sizes[i][j],
+                            //         locations[i][j],
+                            //         data[i][j],
+                            //         i
+                            //     );
+                            // }
+
+                            var folderName = i;
+                            // if this is a subdirectory
+                            var lArr = [];
+                            if (!folders.includes(folderName))
+                                lArr.push(
+                                    fileDesc(
+                                        folderName,
+                                        0,
+                                        "",
+                                        "",
+                                        folderName,
+                                        "dir",
+                                        "dir"
+                                    )
+                                );
                             for (var j = 0; j < data[i].length; j++) {
-                                console.log("i=" + i + ", j=" + j);
-                                console.log(sizes[i][j]);
+                                var folderLocation =
+                                    username + "/" + folderName;
+                                console.log(`folderLocation`, folderLocation);
+
                                 checkSubfolder(
-                                    arr,
+                                    lArr,
                                     data[i][j],
                                     sizes[i][j],
                                     locations[i][j],
-                                    data[i][j],
+                                    folderName + "/" + data[i][j],
                                     i
                                 );
+                                folders.push(folderLocation);
                             }
+                            arr.push(lArr);
+
+                            console.log(
+                                "##################################################"
+                            );
                         }
                     }
                 });
