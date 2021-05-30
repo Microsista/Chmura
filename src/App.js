@@ -16,6 +16,7 @@ import {
     Link,
     Route,
     Redirect,
+    useHistory,
 } from "react-router-dom";
 import {
     FaSortAmountDown,
@@ -33,6 +34,7 @@ import * as _ from "lodash";
 import { useEffect } from "react";
 
 const App = () => {
+    var history = useHistory();
     //
     // Callbacks
     //
@@ -507,9 +509,11 @@ const App = () => {
         setBackup(_.cloneDeep(files));
         setCurrFolder(file2[0].name);
         file2[0].name = "..";
+        file2[0].owner = username;
         setFiles(file2);
         console.log("after folder");
         console.log(files);
+        onGoBack();
     };
 
     const onRestore = () => {
@@ -518,6 +522,7 @@ const App = () => {
         setFiles(backup);
         console.log("after restore");
         console.log(files);
+        onGoBack();
     };
 
     const onDelete = async (id) => {
@@ -556,27 +561,39 @@ const App = () => {
                 console.log(res.statusText);
             });
         setFiles([...files]);
+        onGoBack();
+        setDummy((dummy) => dummy + 1);
     };
+    //const history = useHistory();
 
     const onSortAlphaDown = () => {
         setSortBy("name");
         setAscDesc("asc");
         console.log(sortBy, ascDesc);
+        setDummy((dummy) => dummy + 1);
+        //return <Redirect to="/help" />;
     };
     const onSortAlphaDownAlt = () => {
         setSortBy("name");
         setAscDesc("desc");
         console.log(sortBy, ascDesc);
+        setDummy((dummy) => dummy + 1);
+        //return <Redirect to="/help" />;
     };
     const onSortAmountDown = () => {
         setSortBy("size");
         setAscDesc("asc");
         console.log(sortBy, ascDesc);
+        setDummy((dummy) => dummy + 1);
+        //return <Redirect to="/help" />;
     };
     const onSortAmountDownAlt = () => {
         setSortBy("size");
         setAscDesc("desc");
         console.log(sortBy, ascDesc);
+        console.log("hey");
+        setDummy((dummy) => dummy + 1);
+        //return <Redirect to="/help" />;
     };
 
     const onOpen = (id) => {
@@ -597,7 +614,38 @@ const App = () => {
     const onRename = (value, id) => {
         for (var i in files) {
             if (files[i].id === id) {
+                console.log(
+                    `username + "/" + files[i].name`,
+                    username + "/" + files[i].name
+                );
+                const data = new FormData();
+                data.append("file_path", "");
+                data.append("email", "");
+                console.log(`username`, username);
+                console.log(`files[i].name`, files[i].name);
+                axios
+                    .post(
+                        `http://localhost:8080/api/fileDrop/rename?file_path=${
+                            username + "/" + files[i].name
+                        }&name=${value}`,
+                        data,
+                        {
+                            headers: { Authorization: token },
+                        }
+                    )
+                    .catch((error) => {
+                        console.log(`error`, error);
+                    });
+
                 files[i].name = value;
+
+                // console.log(`value`, value);
+                // console.log(
+                //     `username + "/" + file.name`,
+                //     username + "/" + file[i].name
+                // );
+                // console.log(`token`, token);
+
                 break; //Stop this loop, we found it!
             }
         }
@@ -869,6 +917,7 @@ const App = () => {
     const [redirect, setRedirect] = useState(false);
     const [loggedin, setLoggedin] = useState(false);
     const [files, setFiles] = useState([]);
+    const [temp, setTemp] = useState([]);
     const [sortBy, setSortBy] = useState("name");
     const [ascDesc, setAscDesc] = useState("asc");
     const [id, setId] = useState("id0");
@@ -1034,6 +1083,7 @@ const App = () => {
                                 <div>Commands</div>
                             </div>
                             <Files
+                                key={dummy}
                                 files={files}
                                 onDelete={onDelete}
                                 onShare={onShare}
@@ -1043,6 +1093,11 @@ const App = () => {
                                 onOpen={onOpen}
                                 onFolder={onFolder}
                                 onRestore={onRestore}
+                                username={username}
+                                fileOwner={fileOwner}
+                                token={token}
+                                dummy={dummy}
+                                onGoBack={onGoBack}
                             />
                             <div className="footer">
                                 Total: {files.length} Paths

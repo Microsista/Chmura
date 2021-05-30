@@ -84,6 +84,44 @@ img {
     float: right;
 }
 
+.shareButton {
+    padding: 4px 4px;
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+    outline: none;
+    color: #fff;
+    background-color: #00ff2a;
+    border: none;
+    border-radius: 15px;
+    float: right;
+}
+.unshareButton {
+    padding: 4px 4px;
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+    outline: none;
+    color: #fff;
+    background-color: #ff0000;
+    border: none;
+    border-radius: 15px;
+    float: right;
+}
+
+.listButton {
+    padding: 4px 4px;
+    font-size: 11px;
+    text-align: center;
+    cursor: pointer;
+    outline: none;
+    color: #fff;
+    background-color: #00ccff;
+    border: none;
+    border-radius: 15px;
+    float: right;
+}
+
 .noDeleteButton {
     padding: 4px 4px;
     font-size: 11px;
@@ -185,18 +223,37 @@ img {
     cursor: pointer;
 }
 
+.sharedFile {
+    background: #00c4006e;
+    margin: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.sharedFile h3 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0px, 150px));
+    word-break: break-all;
+    justify-content: space-between;
+}
+
+.exposedFile {
+    background: #00eeff6e;
+    margin: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.exposedFile h3 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0px, 150px));
+    word-break: break-all;
+    justify-content: space-between;
+}
+
 .file.available {
     border-left: 5px solid green;
 }
-
-/* .file h3 {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    flex-wrap: nowrap;
-    max-width: 500px;
-    min-width: 200px;
-} */
 
 .file h3 {
     display: grid;

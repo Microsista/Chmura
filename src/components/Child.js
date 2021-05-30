@@ -1,38 +1,10 @@
-// import { useParams } from "react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-//import { remote} from 'remote-file-size';
-//import { stat } from "react-native-fs";
 
 const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
     const [data, setData] = useState();
     const [size, setSize] = useState();
     const inputEl = useRef(null);
-
-    // useEffect(() => {
-    //     const ctx = inputEl.canvas.getContext("2d");
-
-    //     var imageObj1 = new Image();
-    //     imageObj1.src = `http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`;
-
-    //     const src = `http://localhost:8080/api/fileDrop/download?file_path=${username}/${file}`;
-    //     const options = {
-    //         method: "GET",
-    //         headers: {
-    //             Authorization: token,
-    //         },
-    //     };
-    //     var test;
-    //     fetch(src, options)
-    //         .then((res) => res.blob())
-    //         .then((blob) => {
-    //             imageObj1.src = URL.createObjectURL(blob);
-    //         });
-
-    //     imageObj1.onload = () => {
-    //         ctx.drawImage(imageObj1, 0, 0);
-    //     };
-    // });
 
     if (!file.endsWith("txt")) {
         var oReq = new XMLHttpRequest();
@@ -83,7 +55,7 @@ const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
         var lfile;
         if (words.length > 1) lfile = words[1];
         else lfile = words[0];
-        console.log(fileOwner + lfile);
+        console.log(fileOwner + "/" + lfile);
         const rawResponse = fetch(
             `http://localhost:8080/api/fileDrop/download?file_path=${fileOwner}/${lfile}`,
             requestOptions
@@ -111,12 +83,7 @@ const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
             </Link>
             <div>File path: {file}</div>
             <div>File size: {size / 1000} KB</div>
-            {file.endsWith("txt") ? (
-                data
-            ) : (
-                <img id="myimage"></img>
-                //<canvas ref={inputEl} width={300} height={300}></canvas>
-            )}
+            {file.endsWith("txt") ? data : <img id="myimage"></img>}
         </>
     );
 };

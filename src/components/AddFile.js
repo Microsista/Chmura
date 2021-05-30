@@ -14,8 +14,8 @@ const AddFile = ({ onAddFile, onAdd }) => {
 
     return (
         <form className="add-form" onSubmit={onSubmit}>
-            <div class="row">
-                <div class="col-md-6">
+            <div className="row">
+                <div className="col-md-6">
                     <form method="post" action="#" id="#">
                         <div className="form-control">
                             <label className="unselectable">Directory</label>
@@ -26,11 +26,11 @@ const AddFile = ({ onAddFile, onAdd }) => {
                                 onChange={(e) => setDir(e.target.value)}
                             />
                         </div>
-                        <div class="form-group files">
+                        <div className="form-group files">
                             <label>Upload Your File </label>
                             <input
                                 type="file"
-                                class="form-control"
+                                className="form-control"
                                 multiple=""
                                 onChange={(e) => setFile(e.target.files[0])}
                             />
