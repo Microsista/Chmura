@@ -107,9 +107,13 @@ const File = ({
     };
 
     const onUnshareLocal = (lid) => {
+        console.log(
+            `username + "/" + file.address`,
+            username + "/" + file.address
+        );
         axios.delete(
             `http://localhost:8080/api/fileDrop/unshare?file_path=${
-                username + "/" + file.name
+                username + "/" + file.address
             }`,
             {
                 headers: {

@@ -619,8 +619,7 @@ const App = () => {
                     username + "/" + files[i].name
                 );
                 const data = new FormData();
-                data.append("file_path", "");
-                data.append("email", "");
+                data.append("", "");
                 console.log(`username`, username);
                 console.log(`files[i].name`, files[i].name);
                 axios
@@ -671,6 +670,7 @@ const App = () => {
                 refresh();
                 console.log(res.statusText);
             });
+        onGoBack();
     };
 
     const onNight = () => {
