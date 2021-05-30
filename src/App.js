@@ -198,7 +198,7 @@ const App = () => {
                                             folderName,
                                             0,
                                             "",
-                                            "",
+                                            i,
                                             folderName,
                                             "dir",
                                             "dir"
@@ -243,13 +243,14 @@ const App = () => {
                                 var folderName = i;
                                 // if this is a subdirectory
                                 var lArr = [];
+                                console.log(`i`, i);
                                 if (!folders.includes(folderName))
                                     lArr.push(
                                         fileDesc(
                                             folderName,
                                             0,
                                             "",
-                                            "",
+                                            i,
                                             folderName,
                                             "dir",
                                             "dir"
@@ -502,7 +503,7 @@ const App = () => {
                                                 folderName,
                                                 0,
                                                 "",
-                                                "",
+                                                i,
                                                 folderName,
                                                 "dir",
                                                 "dir"
@@ -553,7 +554,7 @@ const App = () => {
                                                 folderName,
                                                 0,
                                                 "",
-                                                "",
+                                                i,
                                                 folderName,
                                                 "dir",
                                                 "dir"
@@ -954,7 +955,7 @@ const App = () => {
                                         folderName,
                                         0,
                                         "",
-                                        "",
+                                        i,
                                         folderName,
                                         "dir",
                                         "dir"
@@ -1005,7 +1006,7 @@ const App = () => {
                                         folderName,
                                         0,
                                         "",
-                                        "",
+                                        i,
                                         folderName,
                                         "dir",
                                         "dir"

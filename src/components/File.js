@@ -166,6 +166,8 @@ const File = ({
                             ? "exposedFile"
                             : "file"
                         : "sharedFile"
+                    : Array.isArray(file) && !file[0].owner.startsWith(username)
+                    ? "sharedFile"
                     : "file"
             }
         >
