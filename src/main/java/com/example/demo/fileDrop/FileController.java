@@ -76,6 +76,8 @@ public class FileController {
         }
     }
 
+
+
     @PostMapping(path = "/share")
     public ResponseEntity<?> shareFile(@RequestParam("file_path") String filePath, @RequestParam("email") String email) {
         try {
@@ -107,6 +109,18 @@ public class FileController {
             return ResponseEntity.status(404).body("file or user not found");
         }
         return ResponseEntity.ok("file unshared");
+    }
+
+    @PutMapping("/rename")
+    public ResponseEntity<?> renameFile(@RequestParam("file_path") String filePath, @RequestParam("name") String name) {
+        try {
+            if(fileService.renameFile(filePath, name))
+                return ResponseEntity.ok("file renamed");
+            else
+                return ResponseEntity.status(404).body("file with that name already exists or not authorized");
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.status(404).body("file not found");
+        }
     }
 
     //files shared by me

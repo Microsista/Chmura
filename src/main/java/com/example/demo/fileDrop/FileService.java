@@ -121,6 +121,21 @@ public class FileService {
         return false;
     }
 
+    public boolean renameFile(String path, String name) throws FileNotFoundException {
+        if(authPath(path)){
+            File file = new File(myFolder + path);
+            if (!file.exists())
+                throw new FileNotFoundException();
+            String newPath = path.substring(0, path.lastIndexOf('/')) + path.substring(path.lastIndexOf('/') + 1);
+            File file2 = new File(myFolder + newPath);
+            if(file2.exists()){
+                return false;
+            }
+            return file.renameTo(file2);
+        } else
+            return false;
+    }
+
     public void unShareFile(String filePath, String email) throws EntityNotFoundException {
         SharedFile file = sharedFilesRepository.findSharedFileByPathOrError(filePath);
 
