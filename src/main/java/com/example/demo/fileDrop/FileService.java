@@ -123,10 +123,12 @@ public class FileService {
 
     public boolean renameFile(String path, String name) throws FileNotFoundException {
         if(authPath(path)){
+            System.out.println("file 1: " + myFolder + path);
             File file = new File(myFolder + path);
             if (!file.exists())
                 throw new FileNotFoundException();
-            String newPath = path.substring(0, path.lastIndexOf('/')) + path.substring(path.lastIndexOf('/') + 1);
+            String newPath = path.substring(0, path.lastIndexOf('/') + 1) + name;
+            System.out.println("file new: " + myFolder + newPath);
             File file2 = new File(myFolder + newPath);
             if(file2.exists()){
                 return false;
