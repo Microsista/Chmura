@@ -239,8 +239,8 @@ const App = () => {
                                 //         i
                                 //     );
                                 // }
-
-                                var folderName = i;
+                                var sliced = i.split("/");
+                                var folderName = sliced[0];
                                 // if this is a subdirectory
                                 var lArr = [];
                                 console.log(`i`, i);
@@ -250,7 +250,7 @@ const App = () => {
                                             folderName,
                                             0,
                                             "",
-                                            i,
+                                            folderName,
                                             folderName,
                                             "dir",
                                             "dir"
@@ -544,17 +544,18 @@ const App = () => {
                                     //         i
                                     //     );
                                     // }
-
-                                    var folderName = i;
+                                    var sliced = i.split("/");
+                                    var folderName = sliced[0];
                                     // if this is a subdirectory
                                     var lArr = [];
+                                    console.log(`i`, i);
                                     if (!folders.includes(folderName))
                                         lArr.push(
                                             fileDesc(
                                                 folderName,
                                                 0,
                                                 "",
-                                                i,
+                                                folderName,
                                                 folderName,
                                                 "dir",
                                                 "dir"
@@ -703,20 +704,37 @@ const App = () => {
     };
 
     const onRename = (value, id) => {
+        // var fileName;
         for (var i in files) {
+            console.log(`files[i]`, files[i]);
+            // for (var j = 0; j < files[i].length; j++) {
+            //     var folderLocation =
+            //         username + "/" + folderName;
+            //     if (i.startsWith(folderLocation))
+            //         checkSubfolder(
+            //             lArr,
+            //             data[i][j],
+            //             sizes[i][j],
+            //             locations[i][j],
+            //             folderName + "/" + data[i][j],
+            //             i
+            //         );
+            //     folders.push(folderLocation);
+            // }
+
             if (files[i].id === id) {
                 console.log(
-                    `username + "/" + files[i].name`,
-                    username + "/" + files[i].name
+                    `username + "/" + files[i].address`,
+                    username + "/" + files[i].address
                 );
                 const data = new FormData();
                 data.append("", "");
                 console.log(`username`, username);
-                console.log(`files[i].name`, files[i].name);
+                console.log(`files[i].address`, files[i].address);
                 axios
                     .post(
                         `http://localhost:8080/api/fileDrop/rename?file_path=${
-                            username + "/" + files[i].name
+                            username + "/" + files[i].address
                         }&name=${value}`,
                         data,
                         {
@@ -727,8 +745,53 @@ const App = () => {
                         console.log(`error`, error);
                     });
 
-                files[i].name = value;
+                //files[i].name = value;
 
+                // 1. Make a shallow copy of the items
+                let items = [...files];
+                // 2. Make a shallow copy of the item you want to mutate
+                let item = { ...items[i] };
+                // 3. Replace the property you're intested in
+                item.name = value;
+                console.log(`item`, item);
+                // 4. Put it back into our array. N.B. we *are* mutating the array here, but that's why we made a copy first
+                items[i] = item;
+                console.log(`items`, items);
+                // 5. Set the state to our new copy
+                setFiles([...items]);
+                console.log(`files`, files);
+                console.log(`backup`, backup);
+
+                let back = [...backup];
+                console.log(`back`, back);
+                let bitem;
+                console.log(`item.id`, item.id);
+                back.find((element, index, array) => {
+                    if (Array.isArray(element)) {
+                        element.find((file, i, a) => {
+                            console.log(`file`, file);
+                            if (file.id === item.id) bitem = file;
+                        });
+                    } else {
+                        if (element.id === item.id) bitem = element;
+                    }
+                });
+                console.log(`bitem`, bitem);
+                bitem.name = value;
+                console.log(`bitem`, bitem);
+                back.find((element, index, array) => {
+                    if (Array.isArray(element)) {
+                        element.find((file, i, a) => {
+                            console.log(`file`, file);
+                            if (file.id === item.id) file = bitem;
+                        });
+                    }
+                });
+                console.log(`back`, back);
+                setBackup(back);
+                console.log(`backup`, backup);
+
+                //fileName = files[i].name;
                 // console.log(`value`, value);
                 // console.log(
                 //     `username + "/" + file.name`,
@@ -739,7 +802,27 @@ const App = () => {
                 break; //Stop this loop, we found it!
             }
         }
-        setFiles([...files]);
+        // 1. Make a shallow copy of the items
+
+        // for (var i in backup) {
+        //     console.log(`fileName`, fileName);
+        //     console.log(`backup[i].name`, backup[i].name);
+        //     if (backup[i].name === fileName) {
+        //         let items = [...backup];
+        //         // 2. Make a shallow copy of the item you want to mutate
+        //         let item = { ...backup[i] };
+        //         // 3. Replace the property you're intested in
+        //         item.name = value;
+        //         // 4. Put it back into our array. N.B. we *are* mutating the array here, but that's why we made a copy first
+        //         items[i] = item;
+        //         // 5. Set the state to our new copy
+        //         setBackup(items);
+        //     }
+        // }
+        // const found = backup.find((file, index, array) => file.id === id);
+        // found.name = value;
+        //setBackup([...files]);
+        //setFiles([...files]);
     };
 
     const onHelp = () => {};
@@ -996,17 +1079,18 @@ const App = () => {
                             //         i
                             //     );
                             // }
-
-                            var folderName = i;
+                            var sliced = i.split("/");
+                            var folderName = sliced[0];
                             // if this is a subdirectory
                             var lArr = [];
+                            console.log(`i`, i);
                             if (!folders.includes(folderName))
                                 lArr.push(
                                     fileDesc(
                                         folderName,
                                         0,
                                         "",
-                                        i,
+                                        folderName,
                                         folderName,
                                         "dir",
                                         "dir"
