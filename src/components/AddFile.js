@@ -8,6 +8,21 @@ const AddFile = ({ onAddFile, onAdd }) => {
         e.preventDefault();
 
         onAddFile({ name, file, dir });
+
+        // const data = new FormData();
+        // data.append("files", file.file);
+        // data.append("dir", file.dir);
+
+        // axios
+        //     .post("http://localhost:8080/api/fileDrop", data, {
+        //         headers: { Authorization: token },
+        //     })
+        //     .then((res) => {
+        //         refresh();
+        //         console.log(res.statusText);
+        //     });
+        // onGoBack();
+
         setName(file.name);
         onAdd();
     };

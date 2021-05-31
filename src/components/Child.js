@@ -10,9 +10,20 @@ const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
         var oReq = new XMLHttpRequest();
         const words = fileOwner.split("/");
         var owner = words[0];
+        console.log(`owner`, owner);
+        console.log(`file`, file);
+        const splitfile = file.split("/");
+        var justfile;
+        if (splitfile.length > 1) {
+            console.log(`owner`, owner);
+            console.log(`splitfile[0]`, splitfile[0]);
+            if (splitfile[0] === owner) {
+                justfile = splitfile[1];
+            } else justfile = splitfile[0] + "/" + splitfile[1];
+        } else justfile = splitfile[0];
         oReq.open(
             "GET",
-            `http://localhost:8080/api/fileDrop/download?file_path=${owner}/${file}`,
+            `http://localhost:8080/api/fileDrop/download?file_path=${owner}/${justfile}`,
             true
         );
         oReq.setRequestHeader("Authorization", token);
@@ -56,6 +67,8 @@ const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
         if (words.length > 1) lfile = words[1];
         else lfile = words[0];
         console.log(fileOwner + "/" + lfile);
+        console.log(`fileOwner`, fileOwner);
+        console.log(`lfile`, lfile);
         const rawResponse = fetch(
             `http://localhost:8080/api/fileDrop/download?file_path=${fileOwner}/${lfile}`,
             requestOptions
