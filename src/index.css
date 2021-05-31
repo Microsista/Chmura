@@ -292,7 +292,7 @@ img {
 .commandBar {
     margin-left: 10px;
     display: flex;
-    width: 120px;
+    width: 250px;
     justify-content: space-between;
 }
 .files input {

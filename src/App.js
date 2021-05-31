@@ -10,7 +10,7 @@ import Child from "./components/Child";
 import logo from "./cloud.png";
 
 // External libraries
-import { useState } from "react";
+import { useState, useRef, useReducer } from "react";
 import {
     BrowserRouter as Router,
     Link,
@@ -33,7 +33,47 @@ import axios from "axios";
 import * as _ from "lodash";
 import { useEffect } from "react";
 
+// const useComponentWillMount = (func) => {
+//     const willMount = useRef(true);
+
+//     if (willMount.current) func();
+
+//     willMount.current = false;
+// };
+
 const App = () => {
+    // const willMount = useRef(true);
+
+    // if (willMount.current) setDummy(dummy + 1);
+
+    // willMount.current = false;
+    // useComponentWillMount(() => {
+    //     console.log("willMount");
+    //     // if (
+    //     //     typeof file.name !== "undefined" &&
+    //     //     typeof file.owner !== "undefined"
+    //     // ) {
+    //     //     axios
+    //     //         .get(
+    //     //             `http://localhost:8080/api/fileDrop/sharedWith?file_path=${file.owner}/${file.name}`,
+    //     //             {
+    //     //                 headers: { Authorization: token },
+    //     //             }
+    //     //         )
+    //     //         .then((res) => res.data)
+    //     //         .then((data) => {
+    //     //             var emails = data.map((entry) => entry.email);
+    //     //             setShared(emails);
+    //     //         })
+    //     //         .catch((error) =>
+    //     //             //setShared({"dummy"});
+    //     //             console.log(`Unable to get sharedWith, error: `, error)
+    //     //         );
+    //     // }
+    //     //setDummy(dummy + 1);
+    // });
+
+    const [, forceUpdate] = useReducer((x) => x + 1, 0);
     var history = useHistory();
     //
     // Callbacks
@@ -831,20 +871,21 @@ const App = () => {
         setShowAddFile(!showAddFile);
     };
 
-    const onAddFile = (file) => {
+    const onAddFile = async (file) => {
         const data = new FormData();
         data.append("files", file.file);
         data.append("dir", file.dir);
 
-        axios
+        await axios
             .post("http://localhost:8080/api/fileDrop", data, {
                 headers: { Authorization: token },
             })
             .then((res) => {
                 refresh();
+                onGoBack();
+                forceUpdate();
                 console.log(res.statusText);
             });
-        onGoBack();
     };
 
     const onNight = () => {
@@ -1233,6 +1274,7 @@ const App = () => {
                             </div>
                             <div className="commandBar">
                                 <FaPlusSquare
+                                    size="30px"
                                     style={{
                                         color: "black",
                                         cursor: "pointer",
@@ -1241,6 +1283,7 @@ const App = () => {
                                     onClick={onAdd}
                                 />
                                 <FaSortAlphaDown
+                                    size="30px"
                                     style={{
                                         color: "black",
                                         cursor: "pointer",
@@ -1249,6 +1292,7 @@ const App = () => {
                                     onClick={onSortAlphaDown}
                                 />
                                 <FaSortAlphaDownAlt
+                                    size="30px"
                                     style={{
                                         color: "black",
                                         cursor: "pointer",
@@ -1257,6 +1301,7 @@ const App = () => {
                                     onClick={onSortAlphaDownAlt}
                                 />
                                 <FaSortAmountDown
+                                    size="30px"
                                     style={{
                                         color: "black",
                                         cursor: "pointer",
@@ -1265,6 +1310,7 @@ const App = () => {
                                     onClick={onSortAmountDown}
                                 />
                                 <FaSortAmountDownAlt
+                                    size="30px"
                                     style={{
                                         color: "black",
                                         cursor: "pointer",
@@ -1273,6 +1319,7 @@ const App = () => {
                                     onClick={onSortAmountDownAlt}
                                 />
                                 <FaMoon
+                                    size="30px"
                                     style={{
                                         color: "black",
                                         cursor: "pointer",
@@ -1282,6 +1329,7 @@ const App = () => {
                                 />
                                 <Link to="/help">
                                     <FaQuestion
+                                        size="30px"
                                         style={{
                                             color: "black",
                                             cursor: "pointer",
@@ -1292,7 +1340,12 @@ const App = () => {
                                 </Link>
                             </div>
                             {showAddFile && (
-                                <AddFile onAddFile={onAddFile} onAdd={onAdd} />
+                                <AddFile
+                                    onAddFile={onAddFile}
+                                    onAdd={onAdd}
+                                    token={token}
+                                    outfile={file}
+                                />
                             )}
                             <div className="topBar">
                                 <div> Name</div> <div>Size[KB]</div>{" "}

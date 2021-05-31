@@ -1,13 +1,15 @@
 import { useState } from "react";
+import axios from "axios";
 
-const AddFile = ({ onAddFile, onAdd }) => {
+const AddFile = ({ onAddFile, onAdd, token, outfile }) => {
     const [name, setName] = useState("");
     const [file, setFile] = useState();
     const [dir, setDir] = useState("");
-    const onSubmit = (e) => {
+    const onSubmit = async (e) => {
         e.preventDefault();
 
-        onAddFile({ name, file, dir });
+        await onAddFile({ name, file, dir });
+        //onAddFileLocal({ name, file, dir });
 
         // const data = new FormData();
         // data.append("files", file.file);
@@ -18,13 +20,27 @@ const AddFile = ({ onAddFile, onAdd }) => {
         //         headers: { Authorization: token },
         //     })
         //     .then((res) => {
-        //         refresh();
         //         console.log(res.statusText);
         //     });
-        // onGoBack();
 
         setName(file.name);
         onAdd();
+    };
+
+    const onAddFileLocal = (file) => {
+        const data = new FormData();
+        data.append("files", file.file);
+        data.append("dir", file.dir);
+
+        axios
+            .post("http://localhost:8080/api/fileDrop", data, {
+                headers: { Authorization: token },
+            })
+            .then((res) => {
+                //refresh();
+                console.log(res.statusText);
+            });
+        //onGoBack();
     };
 
     return (

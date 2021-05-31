@@ -70,6 +70,7 @@ const File = ({
     const [, forceUpdate] = useReducer((x) => x + 1, 0);
     const [state, setState] = useState();
     const [state2, setState2] = useState();
+    const [ldummy, setLDummy] = useState();
 
     const onRenameLocal = (idl) => {
         setEdit(!edit);
@@ -153,6 +154,7 @@ const File = ({
                     console.log(`Unable to get sharedWith, error: `, error)
                 );
         }
+        setLDummy(dummy);
     }, []);
 
     console.log(`file.owner`, file.owner);
@@ -188,7 +190,7 @@ const File = ({
                 Array.isArray(file) ? (
                     <Link to={"/"} onClick={() => onFolder(file)}>
                         <div className="item">
-                            <FaFolder className="fileIcon" />
+                            <FaFolder size="30px" className="fileIcon" />
                             {file[0].name}
                         </div>
                     </Link>
@@ -197,7 +199,7 @@ const File = ({
                 file.name === ".." ? (
                     <Link to={"/"} onClick={() => onRestore()}>
                         <div className="item">
-                            <FaFolderOpen className="fileIcon" />
+                            <FaFolderOpen size="30px" className="fileIcon" />
                             {file.name}
                         </div>
                     </Link>
@@ -209,9 +211,9 @@ const File = ({
                     >
                         <div className="item">
                             {file.name.endsWith("txt") ? (
-                                <FaFileWord className="fileIcon" />
+                                <FaFileWord size="30px" className="fileIcon" />
                             ) : (
-                                <FaFileImage className="fileIcon" />
+                                <FaFileImage size="30px" className="fileIcon" />
                             )}
                             {file.name}
                         </div>
@@ -232,9 +234,11 @@ const File = ({
                                 file.owner.startsWith(username) ? (
                                     <>
                                         <FaFileSignature
+                                            size="30px"
                                             style={{
                                                 color: "black",
                                                 cursor: "pointer",
+                                                margin: "5px",
                                             }}
                                             onClick={() =>
                                                 onRenameLocal(file.id)
@@ -246,9 +250,11 @@ const File = ({
                                             trigger={
                                                 <button className="btn2">
                                                     <FaShare
+                                                        size="30px"
                                                         style={{
                                                             color: "black",
                                                             cursor: "pointer",
+                                                            margin: "5px",
                                                         }}
                                                     />
                                                 </button>
@@ -299,9 +305,11 @@ const File = ({
                                         </Popup>
 
                                         <FaTimes
+                                            size="30px"
                                             style={{
                                                 color: "red",
                                                 cursor: "pointer",
+                                                margin: "5px",
                                             }}
                                             onClick={() => {
                                                 onDelete(file.id);
@@ -313,6 +321,7 @@ const File = ({
                                 // THIS IS COMMANDS if file.owner is undefined
                                 <>
                                     <FaFileSignature
+                                        size="30px"
                                         style={{
                                             color: "black",
                                             cursor: "pointer",
@@ -321,10 +330,12 @@ const File = ({
                                     />
 
                                     <Popup
+                                        size="30px"
                                         open={false}
                                         trigger={
                                             <button className="btn2">
                                                 <FaShare
+                                                    size="30px"
                                                     style={{
                                                         color: "black",
                                                         cursor: "pointer",
@@ -378,6 +389,7 @@ const File = ({
                                     </Popup>
 
                                     <FaTimes
+                                        size="30px"
                                         style={{
                                             color: "red",
                                             cursor: "pointer",
