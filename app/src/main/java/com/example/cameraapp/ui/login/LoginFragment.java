@@ -70,8 +70,11 @@ public class LoginFragment extends Fragment {
     private EditText editTextTitle;
     private EditText editTextMessage;
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // SSL
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     public SSLContext context = null;
-    public SSLContext context1 = null;
 
     public void doBasicAuth(View view) {
         new Connection().execute();
@@ -93,6 +96,7 @@ public class LoginFragment extends Fragment {
     }
 
     private void connect() {
+        // Create certificate factory
         CertificateFactory cf = null;
         try {
             cf = CertificateFactory.getInstance("X.509");
@@ -107,8 +111,8 @@ public class LoginFragment extends Fragment {
                     return false;
                 }
             });
+            // Certificate pinning, make sure the certificate is filled and present in backend.
             InputStream caInput = getActivity().getAssets().open("load-der.crt");
-            // InputStream caInput = new BufferInputStream(f);
             Certificate ca = null;
             try {
                 ca = cf.generateCertificate(caInput);
@@ -144,20 +148,24 @@ public class LoginFragment extends Fragment {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
+
         URL url = null;
         try {
             url = new URL("https://192.168.1.13:8080/api/signIn");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
+
         HttpsURLConnection urlConnection = null;
         try {
             urlConnection = (HttpsURLConnection)url.openConnection();
-            final String basicAuth = "Basic " + Base64.encodeToString("user:pass".getBytes(), Base64.NO_WRAP); // this is just a template, you can provide your own user and password
+            // Change to beared authorization?
+            final String basicAuth = "Basic " + Base64.encodeToString("user:pass".getBytes(), Base64.NO_WRAP); // this is just a template, you can provide your own user and password.
             urlConnection.setRequestProperty("Authorization", basicAuth);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         urlConnection.setSSLSocketFactory(context.getSocketFactory());
         try {
             System.out.println(urlConnection.getResponseMessage());
@@ -177,57 +185,31 @@ public class LoginFragment extends Fragment {
         }
 
     }
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Lifetime methods
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public void sendOnChannel1(View v) {
-        String title = editTextTitle.getText().toString();
-        String message = editTextMessage.getText().toString();
-
-        Notification notification = new NotificationCompat.Builder(getActivity(), CHANNEL_1_ID)
-                .setSmallIcon(R.drawable.ic_1)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .build();
-
-        notificationManager.notify(1, notification);
-    }
-
-    public void sendOnChannel2(View v) {
-        String title = editTextTitle.getText().toString();
-        String message = editTextMessage.getText().toString();
-
-        Notification notification = new NotificationCompat.Builder(getActivity(), CHANNEL_2_ID)
-                .setSmallIcon(R.drawable.ic_2)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .build();
-
-        notificationManager.notify(2, notification);
-
-    }
-
+    // Constructor
     public LoginFragment() {
         // Required empty public constructor
     }
 
+    // On FRAGMENT create
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         notificationManager = NotificationManagerCompat.from(getActivity());
-
-
     }
 
+    // On VIEW create
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_login, container, false);
     }
 
+    // On VIEW ALREADY CREATED
     private LoginViewModel loginViewModel;
 
     @Override
@@ -244,6 +226,7 @@ public class LoginFragment extends Fragment {
         loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory())
                 .get(LoginViewModel.class);
 
+        // References to UI elements
         final EditText usernameEditText = view.findViewById(R.id.username);
         final EditText passwordEditText = view.findViewById(R.id.password);
         final Button loginButton = view.findViewById(R.id.login);
@@ -255,28 +238,9 @@ public class LoginFragment extends Fragment {
         final Button bSend2 = view.findViewById(R.id.bSend2);
         final Button bSSL = view.findViewById(R.id.bSSL);
 
-        bSSL.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                doBasicAuth(view);
-            }
-        });
-
-
-        bSend1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendOnChannel1(view);
-            }
-        });
-
-        bSend2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendOnChannel2(view);
-            }
-        });
-
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Observers (to control object visiblity, availability etc.)
+        ////////////////////////////////////////////////////////////////////////////////////////////
 
         loginViewModel.getLoginFormState().observe(getActivity(), new Observer<LoginFormState>() {
             @Override
@@ -310,6 +274,10 @@ public class LoginFragment extends Fragment {
                 }
             }
         });
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Listeners (to react to user input)
+        ////////////////////////////////////////////////////////////////////////////////////////////
 
         TextWatcher afterTextChangedListener = new TextWatcher() {
             @Override
@@ -362,6 +330,7 @@ public class LoginFragment extends Fragment {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             }
         });
+        
         languageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -379,7 +348,33 @@ public class LoginFragment extends Fragment {
                 getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, new RegisterFragment()).commit();
             }
         });
+
+        bSSL.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                doBasicAuth(view);
+            }
+        });
+
+
+        bSend1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendOnChannel1(view);
+            }
+        });
+
+        bSend2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendOnChannel2(view);
+            }
+        });
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Utilities
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateUiWithUser(View view, LoggedInUserView model) {
         String welcome = getString(R.string.welcome) + " " + model.getDisplayName();
@@ -389,5 +384,34 @@ public class LoginFragment extends Fragment {
 
     private void showLoginFailed(@StringRes Integer errorString) {
         Toast.makeText(getActivity(), errorString, Toast.LENGTH_SHORT).show();
+    }
+
+    public void sendOnChannel1(View v) {
+        String title = editTextTitle.getText().toString();
+        String message = editTextMessage.getText().toString();
+
+        Notification notification = new NotificationCompat.Builder(getActivity(), CHANNEL_1_ID)
+                .setSmallIcon(R.drawable.ic_1)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .build();
+
+        notificationManager.notify(1, notification);
+    }
+
+    public void sendOnChannel2(View v) {
+        String title = editTextTitle.getText().toString();
+        String message = editTextMessage.getText().toString();
+
+        Notification notification = new NotificationCompat.Builder(getActivity(), CHANNEL_2_ID)
+                .setSmallIcon(R.drawable.ic_2)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build();
+
+        notificationManager.notify(2, notification);
     }
 }
