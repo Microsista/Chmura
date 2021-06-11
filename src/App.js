@@ -856,7 +856,7 @@ const App = () => {
                 console.log(`username`, username);
                 console.log(`files[i].address`, files[i].address);
                 axios
-                    .post(
+                    .put(
                         `https://localhost:8443/api/fileDrop/rename?file_path=${
                             username + "/" + files[i].address
                         }&name=${value}`,
