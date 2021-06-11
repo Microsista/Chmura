@@ -16,7 +16,7 @@ const AddFile = ({ onAddFile, onAdd, token, outfile }) => {
         // data.append("dir", file.dir);
 
         // axios
-        //     .post("http://localhost:8080/api/fileDrop", data, {
+        //     .post("https://localhost:8443/api/fileDrop", data, {
         //         headers: { Authorization: token },
         //     })
         //     .then((res) => {
@@ -33,7 +33,7 @@ const AddFile = ({ onAddFile, onAdd, token, outfile }) => {
         data.append("dir", file.dir);
 
         axios
-            .post("http://localhost:8080/api/fileDrop", data, {
+            .post("https://localhost:8443/api/fileDrop", data, {
                 headers: { Authorization: token },
             })
             .then((res) => {

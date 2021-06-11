@@ -44,7 +44,7 @@ const File = ({
         ) {
             axios
                 .get(
-                    `http://localhost:8080/api/fileDrop/sharedWith?file_path=${file.owner}/${file.name}`,
+                    `https://localhost:8443/api/fileDrop/sharedWith?file_path=${file.owner}/${file.name}`,
                     {
                         headers: { Authorization: token },
                     }
@@ -97,7 +97,7 @@ const File = ({
         const data = new FormData();
         data.append("file_path", username + "/" + file.address);
         data.append("email", input);
-        await axios.post(`http://localhost:8080/api/fileDrop/share`, data, {
+        await axios.post(`https://localhost:8443/api/fileDrop/share`, data, {
             headers: { Authorization: token },
         });
 
@@ -113,7 +113,7 @@ const File = ({
             username + "/" + file.address
         );
         await axios.delete(
-            `http://localhost:8080/api/fileDrop/unshare?file_path=${
+            `https://localhost:8443/api/fileDrop/unshare?file_path=${
                 username + "/" + file.address
             }`,
             {
@@ -139,7 +139,7 @@ const File = ({
         ) {
             axios
                 .get(
-                    `http://localhost:8080/api/fileDrop/sharedWith?file_path=${file.owner}/${file.name}`,
+                    `https://localhost:8443/api/fileDrop/sharedWith?file_path=${file.owner}/${file.name}`,
                     {
                         headers: { Authorization: token },
                     }

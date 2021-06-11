@@ -32,6 +32,7 @@ import Popup from "reactjs-popup";
 import axios from "axios";
 import * as _ from "lodash";
 import { useEffect } from "react";
+import https from "https";
 
 // const useComponentWillMount = (func) => {
 //     const willMount = useRef(true);
@@ -55,7 +56,7 @@ const App = () => {
     //     // ) {
     //     //     axios
     //     //         .get(
-    //     //             `http://localhost:8080/api/fileDrop/sharedWith?file_path=${file.owner}/${file.name}`,
+    //     //             `https://localhost:8443/api/fileDrop/sharedWith?file_path=${file.owner}/${file.name}`,
     //     //             {
     //     //                 headers: { Authorization: token },
     //     //             }
@@ -82,7 +83,7 @@ const App = () => {
     const onGoBack = () => {
         setDummy(dummy + 1);
     };
-
+    const https = require("https");
     const onLogin = async (username, password) => {
         const requestOptions = {
             method: "POST",
@@ -94,20 +95,59 @@ const App = () => {
                 username,
                 password,
             }),
+            agent: new https.Agent({
+                rejectUnauthorized: false,
+            }),
         };
 
         var mytoken;
-        await fetch("http://localhost:8080/api/auth/signIn", requestOptions)
+        await fetch("https://localhost:8443/api/auth/signIn", requestOptions)
             .then((response) => response.json())
             .then((data) => {
                 mytoken = data.token;
             });
 
+        const data = new FormData();
+        data.append("username", username);
+        data.append("password", password);
+
+        const instance = axios.create({
+            httpsAgent: new https.Agent({
+                rejectUnauthorized: false,
+            }),
+        });
+
+        // await instance
+        //     .post(`https://localhost:8443/api/auth/signIn`, data, {
+        //         headers: {
+        //             Accept: "application/json",
+        //             "Content-Type": "application/json",
+        //         },
+        //     })
+        //     .then((response) => response.json)
+        //     .then((data) => {
+        //         mytoken = data.token;
+        //     });
+
         const rawResponse = await fetch(
-            "http://localhost:8080/api/auth/signIn",
+            "https://localhost:8443/api/auth/signIn",
             requestOptions
         );
 
+        // const rawResponse = await instance.post(
+        //     `https://localhost:8443/api/auth/signIn`,
+
+        //     data,
+        //     {
+        //         headers: {
+        //             Accept: "application/json",
+        //             "Content-Type": "application/json",
+        //         },
+        //     }
+        // );
+        console.log(`rawResponse`, rawResponse);
+
+        console.log("HEY");
         // If login was successful.
         if (rawResponse.status === 200) {
             setRedirect(true);
@@ -132,11 +172,32 @@ const App = () => {
 
             var fetchedData;
 
-            await fetch("http://localhost:8080/api/fileDrop", options)
+            await fetch("https://localhost:8443/api/fileDrop", options)
                 .then((response) => response.json())
                 .then((outerdata) => {
                     fetchedData = outerdata;
                 });
+
+            // await instance
+            //     .get(
+            //         `https://localhost:8443/api/fileDrop`,
+            //         {
+            //             httpsAgent: new https.Agent({
+            //                 rejectUnauthorized: false,
+            //             }),
+            //         },
+            //         {
+            //             headers: {
+            //                 Accept: "application/json",
+            //                 "Content-Type": "application/json",
+            //                 Authorization: mystring,
+            //             },
+            //         }
+            //     )
+            //     .then((response) => response.json)
+            //     .then((data) => {
+            //         fetchedData = data;
+            //     });
 
             // get array size///////////////////////////////
 
@@ -183,9 +244,28 @@ const App = () => {
                 for (var i in dataentry) {
                     for (var j = 0; j < dataentry[i].length; j++) {
                         var resp = await fetch(
-                            `http://localhost:8080/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
+                            `https://localhost:8443/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
                             options2
                         );
+                        // var resp = await instance
+                        //     .get(
+                        //         `https://localhost:8443/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
+                        //         {
+                        //             httpsAgent: new https.Agent({
+                        //                 rejectUnauthorized: false,
+                        //             }),
+                        //         },
+                        //         {
+                        //             headers: {
+                        //                 Authorization: mystring,
+                        //             },
+                        //         }
+                        //     )
+                        //     .then((response) => response.json)
+                        //     .then((data) => {
+                        //         fetchedData = data;
+                        //     });
+
                         sizes[i][j] = resp.headers.get("content-length") / 1000;
                         locations[i][j] = "[0.0, 0.0]";
                     }
@@ -203,7 +283,23 @@ const App = () => {
 
             var arr = [];
             var folders = [];
-            await fetch("http://localhost:8080/api/fileDrop", options)
+            await fetch("https://localhost:8443/api/fileDrop", options)
+                // await instance
+                //     .get(
+                //         "https://localhost:8443/api/fileDrop",
+                //         {
+                //             httpsAgent: new https.Agent({
+                //                 rejectUnauthorized: false,
+                //             }),
+                //         },
+                //         {
+                //             headers: {
+                //                 "Content-Type": "application/json",
+                //                 Accept: "application/json",
+                //                 Authorization: mystring,
+                //             },
+                //         }
+                //     )
                 .then((response) => response.json())
                 .then((outerdata) => {
                     Object.entries(outerdata).map((dat) => {
@@ -340,7 +436,7 @@ const App = () => {
             },
         };
         const rawResponse = await fetch(
-            "http://localhost:8080/api/auth/delete",
+            "https://localhost:8443/api/auth/delete",
             requestOptions
         );
 
@@ -379,7 +475,7 @@ const App = () => {
         };
 
         const rawResponse = await fetch(
-            "http://localhost:8080/api/auth/signUp",
+            "https://localhost:8443/api/auth/signUp",
             requestOptions
         );
 
@@ -402,14 +498,17 @@ const App = () => {
             };
 
             var mytoken;
-            await fetch("http://localhost:8080/api/auth/signIn", requestOptions)
+            await fetch(
+                "https://localhost:8443/api/auth/signIn",
+                requestOptions
+            )
                 .then((response) => response.json())
                 .then((data) => {
                     mytoken = data.token;
                 });
 
             const rawResponse = await fetch(
-                "http://localhost:8080/api/auth/signIn",
+                "https://localhost:8443/api/auth/signIn",
                 requestOptions
             );
 
@@ -437,7 +536,7 @@ const App = () => {
 
                 var fetchedData;
 
-                await fetch("http://localhost:8080/api/fileDrop", options)
+                await fetch("https://localhost:8443/api/fileDrop", options)
                     .then((response) => response.json())
                     .then((outerdata) => {
                         fetchedData = outerdata;
@@ -488,7 +587,7 @@ const App = () => {
                     for (var i in dataentry) {
                         for (var j = 0; j < dataentry[i].length; j++) {
                             var resp = await fetch(
-                                `http://localhost:8080/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
+                                `https://localhost:8443/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
                                 options2
                             );
                             sizes[i][j] =
@@ -509,7 +608,7 @@ const App = () => {
 
                 var arr = [];
                 var folders = [];
-                await fetch("http://localhost:8080/api/fileDrop", options)
+                await fetch("https://localhost:8443/api/fileDrop", options)
                     .then((response) => response.json())
                     .then((outerdata) => {
                         Object.entries(outerdata).map((dat) => {
@@ -668,7 +767,7 @@ const App = () => {
             },
         };
         await fetch(
-            `http://localhost:8080/api/fileDrop/delete?file_path=${username}/${found.address}`,
+            `https://localhost:8443/api/fileDrop/delete?file_path=${username}/${found.address}`,
             options
         );
 
@@ -685,7 +784,7 @@ const App = () => {
         data.append("file_path", username + "/" + curFile.address);
         data.append("email", input);
         axios
-            .post(`http://localhost:8080/api/fileDrop/share`, data, {
+            .post(`https://localhost:8443/api/fileDrop/share`, data, {
                 headers: { Authorization: token },
             })
             .then((res) => {
@@ -747,21 +846,6 @@ const App = () => {
         // var fileName;
         for (var i in files) {
             console.log(`files[i]`, files[i]);
-            // for (var j = 0; j < files[i].length; j++) {
-            //     var folderLocation =
-            //         username + "/" + folderName;
-            //     if (i.startsWith(folderLocation))
-            //         checkSubfolder(
-            //             lArr,
-            //             data[i][j],
-            //             sizes[i][j],
-            //             locations[i][j],
-            //             folderName + "/" + data[i][j],
-            //             i
-            //         );
-            //     folders.push(folderLocation);
-            // }
-
             if (files[i].id === id) {
                 console.log(
                     `username + "/" + files[i].address`,
@@ -773,7 +857,7 @@ const App = () => {
                 console.log(`files[i].address`, files[i].address);
                 axios
                     .post(
-                        `http://localhost:8080/api/fileDrop/rename?file_path=${
+                        `https://localhost:8443/api/fileDrop/rename?file_path=${
                             username + "/" + files[i].address
                         }&name=${value}`,
                         data,
@@ -830,39 +914,9 @@ const App = () => {
                 console.log(`back`, back);
                 setBackup(back);
                 console.log(`backup`, backup);
-
-                //fileName = files[i].name;
-                // console.log(`value`, value);
-                // console.log(
-                //     `username + "/" + file.name`,
-                //     username + "/" + file[i].name
-                // );
-                // console.log(`token`, token);
-
                 break; //Stop this loop, we found it!
             }
         }
-        // 1. Make a shallow copy of the items
-
-        // for (var i in backup) {
-        //     console.log(`fileName`, fileName);
-        //     console.log(`backup[i].name`, backup[i].name);
-        //     if (backup[i].name === fileName) {
-        //         let items = [...backup];
-        //         // 2. Make a shallow copy of the item you want to mutate
-        //         let item = { ...backup[i] };
-        //         // 3. Replace the property you're intested in
-        //         item.name = value;
-        //         // 4. Put it back into our array. N.B. we *are* mutating the array here, but that's why we made a copy first
-        //         items[i] = item;
-        //         // 5. Set the state to our new copy
-        //         setBackup(items);
-        //     }
-        // }
-        // const found = backup.find((file, index, array) => file.id === id);
-        // found.name = value;
-        //setBackup([...files]);
-        //setFiles([...files]);
     };
 
     const onHelp = () => {};
@@ -877,7 +931,7 @@ const App = () => {
         data.append("dir", file.dir);
 
         await axios
-            .post("http://localhost:8080/api/fileDrop", data, {
+            .post("https://localhost:8443/api/fileDrop", data, {
                 headers: { Authorization: token },
             })
             .then((res) => {
@@ -956,7 +1010,7 @@ const App = () => {
 
         var fetchedData;
 
-        await fetch("http://localhost:8080/api/fileDrop", options)
+        await fetch("https://localhost:8443/api/fileDrop", options)
             .then((response) => response.json())
             .then((outerdata) => {
                 fetchedData = outerdata;
@@ -1025,7 +1079,7 @@ const App = () => {
                     // console.log(`${i}/${dataentry[i][j]}`);
 
                     var resp = await fetch(
-                        `http://localhost:8080/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
+                        `https://localhost:8443/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
                         options2
                     );
                     sizes[i][j] = resp.headers.get("content-length") / 1000;
@@ -1045,7 +1099,7 @@ const App = () => {
 
         var arr = [];
         var folders = [];
-        await fetch("http://localhost:8080/api/fileDrop", options)
+        await fetch("https://localhost:8443/api/fileDrop", options)
             .then((response) => response.json())
             .then((outerdata) => {
                 Object.entries(outerdata).map((dat) => {

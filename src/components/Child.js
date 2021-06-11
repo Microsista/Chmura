@@ -23,7 +23,7 @@ const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
         } else justfile = splitfile[0];
         oReq.open(
             "GET",
-            `http://localhost:8080/api/fileDrop/download?file_path=${owner}/${justfile}`,
+            `https://localhost:8443/api/fileDrop/download?file_path=${owner}/${justfile}`,
             true
         );
         oReq.setRequestHeader("Authorization", token);
@@ -70,7 +70,7 @@ const Child = ({ id, file, backup, username, onGoBack, token, fileOwner }) => {
         console.log(`fileOwner`, fileOwner);
         console.log(`lfile`, lfile);
         const rawResponse = fetch(
-            `http://localhost:8080/api/fileDrop/download?file_path=${fileOwner}/${lfile}`,
+            `https://localhost:8443/api/fileDrop/download?file_path=${fileOwner}/${lfile}`,
             requestOptions
         )
             .then((response) => {
