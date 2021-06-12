@@ -1,7 +1,8 @@
-package com.example.demo.user_service;
+package com.example.demo.services;
 
-import com.example.demo.student.Student;
-import com.example.demo.student.StudentRepository;
+import com.example.demo.models.UserDetailsImpl;
+import com.example.demo.models.Student;
+import com.example.demo.repositories.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

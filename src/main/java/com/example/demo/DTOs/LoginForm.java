@@ -1,4 +1,4 @@
-package com.example.demo.login;
+package com.example.demo.DTOs;
 
 public class LoginForm {
     private String username;

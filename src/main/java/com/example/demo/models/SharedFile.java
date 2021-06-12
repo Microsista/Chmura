@@ -1,5 +1,6 @@
-package com.example.demo.student;
+package com.example.demo.models;
 
+import com.example.demo.models.Student;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

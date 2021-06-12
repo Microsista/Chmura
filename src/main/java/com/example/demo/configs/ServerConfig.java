@@ -1,4 +1,4 @@
-package com.example.demo.jwtServices;
+package com.example.demo.configs;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;

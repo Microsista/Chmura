@@ -1,6 +1,6 @@
-package com.example.demo.login;
+package com.example.demo.jwtServices;
 
-import com.example.demo.user_service.UserDetailsImpl;
+import com.example.demo.models.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

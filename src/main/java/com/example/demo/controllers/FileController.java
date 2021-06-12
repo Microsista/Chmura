@@ -1,33 +1,19 @@
-package com.example.demo.fileDrop;
+package com.example.demo.controllers;
 
-import com.example.demo.login.JwtResponse;
-import com.example.demo.login.JwtUtils;
-import com.example.demo.login.LoginForm;
-import com.example.demo.student.SharedFile;
-import com.example.demo.student.SharedFilesRepository;
-import com.example.demo.student.Student;
-import com.example.demo.student.StudentService;
-import com.example.demo.user_service.UserDetailsImpl;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.example.demo.fileDrop.FileNames;
+import com.example.demo.DTOs.Image;
+import com.example.demo.services.FileService;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
 
 import javax.persistence.EntityNotFoundException;
-import javax.servlet.ServletContext;
 import java.io.FileNotFoundException;
 import java.util.*;
 
@@ -50,6 +36,20 @@ public class FileController {
         return fileService.getAllFilenames();
     }
 
+    @PostMapping("/image")
+    public String uploadImage(@RequestBody Image image) {
+        return fileService.uploadImage(image);
+    }
+
+
+    @GetMapping("/image")
+    public ResponseEntity<?> getGeoLocation(@RequestParam("file_path") String filePath) {
+        try {
+            return ResponseEntity.ok(fileService.getGeoLocation(filePath));
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.ok("0, 0, 0, 0"); //standard geoloc
+        }
+    }
 
     @GetMapping(path = "/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @ResponseBody
@@ -75,8 +75,6 @@ public class FileController {
             return ResponseEntity.status(404).body("nie znaleziono pliku na serwerze");
         }
     }
-
-
 
     @PostMapping(path = "/share")
     public ResponseEntity<?> shareFile(@RequestParam("file_path") String filePath, @RequestParam("email") String email) {
@@ -114,7 +112,7 @@ public class FileController {
     @PutMapping("/rename")
     public ResponseEntity<?> renameFile(@RequestParam("file_path") String filePath, @RequestParam("name") String name) {
         try {
-            if(fileService.renameFile(filePath, name))
+            if (fileService.renameFile(filePath, name))
                 return ResponseEntity.ok("file renamed");
             else
                 return ResponseEntity.status(404).body("file with that name already exists or not authorized");

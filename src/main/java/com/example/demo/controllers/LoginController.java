@@ -1,8 +1,12 @@
-package com.example.demo.login;
+package com.example.demo.controllers;
 
-import com.example.demo.student.Student;
-import com.example.demo.student.StudentService;
-import com.example.demo.user_service.UserDetailsImpl;
+import com.example.demo.jwtServices.JwtUtils;
+import com.example.demo.DTOs.JwtResponse;
+import com.example.demo.DTOs.LoginForm;
+import com.example.demo.DTOs.SignUpForm;
+import com.example.demo.models.Student;
+import com.example.demo.services.StudentService;
+import com.example.demo.models.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;

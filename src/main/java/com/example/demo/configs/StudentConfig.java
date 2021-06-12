@@ -1,5 +1,7 @@
-package com.example.demo.student;
+package com.example.demo.configs;
 
+import com.example.demo.models.Student;
+import com.example.demo.repositories.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;

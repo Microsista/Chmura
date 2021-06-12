@@ -1,6 +1,10 @@
-package com.example.demo.student;
+package com.example.demo.services;
 
-import com.example.demo.user_service.UserDetailsImpl;
+import com.example.demo.models.UserDetailsImpl;
+import com.example.demo.models.SharedFile;
+import com.example.demo.repositories.SharedFilesRepository;
+import com.example.demo.models.Student;
+import com.example.demo.repositories.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

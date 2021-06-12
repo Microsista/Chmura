@@ -1,7 +1,7 @@
 package com.example.demo.fileDrop;
 
-import com.example.demo.student.SharedFile;
-import com.example.demo.student.Student;
+import com.example.demo.models.SharedFile;
+import com.example.demo.models.Student;
 
 import java.io.File;
 import java.util.ArrayList;

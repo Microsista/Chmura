@@ -1,14 +1,10 @@
-package com.example.demo.student;
+package com.example.demo.controllers;
 
-import com.example.demo.user_service.UserDetailsImpl;
+import com.example.demo.services.StudentService;
+import com.example.demo.models.Student;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.util.List;
 
 
