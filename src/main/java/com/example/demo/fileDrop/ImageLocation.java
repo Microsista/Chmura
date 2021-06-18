@@ -9,6 +9,7 @@ import javax.persistence.*;
 @RequiredArgsConstructor
 @Table
 @Entity
+@NoArgsConstructor
 public class ImageLocation {
 
     @Id

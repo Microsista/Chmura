@@ -74,7 +74,7 @@ public class FileService {
             byte[] imageByte = Base64.getDecoder().decode(image.getImage());
             try {
                 new FileOutputStream(path).write(imageByte);
-                ImageLocation imageLocation = new ImageLocation(image.getPath(), image.getGeoHeight(), image.getGeoWidth());
+                ImageLocation imageLocation = new ImageLocation(me().getUsername() + "/" + image.getPath(), image.getGeoHeight(), image.getGeoWidth());
                 imageService.save(imageLocation);
                 return "success";
             } catch (IOException e) {
