@@ -23,7 +23,7 @@
     <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
-        android:layout_height="553dp"
+        android:layout_height="481dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
@@ -31,7 +31,7 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="39dp"
         android:layout_marginEnd="0dp"
-        android:layout_marginBottom="139dp"
+        android:layout_marginBottom="211dp"
         android:scrollbars="vertical"
         android:text="@string/placeholder_text"
         app:layout_constraintBottom_toTopOf="@+id/imageView2"
@@ -77,5 +77,14 @@
         android:layout_marginEnd="210dp"
         android:layout_marginBottom="0dp"
         android:text="@string/images" />
+
+    <EditText
+        android:id="@+id/fileName"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="104dp"
+        android:layout_marginBottom="137dp" />
 
 </RelativeLayout>

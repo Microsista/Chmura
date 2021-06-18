@@ -5,6 +5,8 @@
     <string name="prompt_username">Username</string>
     <string name="prompt_password">Password</string>
     <string name="prompt_email">Email</string>
+<!--    <string name="prompt_fileName">Filename</string>-->
+
     <string name="date_of_birth">Date of Birth</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_sign_up">Sign up</string>
@@ -25,4 +27,5 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="night_mode_off">NIGHT MODE OFF</string>
     <string name="night_mode_on">NIGHT MODE ON</string>
+<!--    <string name="raw/extracas">myCertificate</string>-->
 </resources>

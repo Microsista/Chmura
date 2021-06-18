@@ -1,10 +1,6 @@
 package com.example.cameraapp.ui.login;
 
 import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.UiModeManager;
-import android.content.Context;
-import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
@@ -19,7 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Base64;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,9 +28,20 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.cameraapp.ImageFragment;
 import com.example.cameraapp.MainActivity;
 import com.example.cameraapp.R;
+import com.example.cameraapp.data.model.LoggedInUser;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -52,6 +59,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -59,7 +68,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManagerFactory;
 
-import static android.content.Context.UI_MODE_SERVICE;
+import static com.android.volley.VolleyLog.TAG;
 import static com.example.cameraapp.App.CHANNEL_1_ID;
 import static com.example.cameraapp.App.CHANNEL_2_ID;
 
@@ -69,6 +78,10 @@ public class LoginFragment extends Fragment {
     private NotificationManagerCompat notificationManager;
     private EditText editTextTitle;
     private EditText editTextMessage;
+    private String m_token;
+
+    EditText usernameEditText = null;
+    EditText passwordEditText = null;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // SSL
@@ -112,7 +125,7 @@ public class LoginFragment extends Fragment {
                 }
             });
             // Certificate pinning, make sure the certificate is filled and present in backend.
-            InputStream caInput = getActivity().getAssets().open("load-der.crt");
+            InputStream caInput = getActivity().getAssets().open("raw/mycertificate.crt");
             Certificate ca = null;
             try {
                 ca = cf.generateCertificate(caInput);
@@ -151,7 +164,7 @@ public class LoginFragment extends Fragment {
 
         URL url = null;
         try {
-            url = new URL("https://192.168.1.13:8080/api/signIn");
+            url = new URL("https://192.168.1.13:8443/api/auth/signIn");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -159,14 +172,18 @@ public class LoginFragment extends Fragment {
         HttpsURLConnection urlConnection = null;
         try {
             urlConnection = (HttpsURLConnection)url.openConnection();
-            // Change to beared authorization?
-            final String basicAuth = "Basic " + Base64.encodeToString("user:pass".getBytes(), Base64.NO_WRAP); // this is just a template, you can provide your own user and password.
-            urlConnection.setRequestProperty("Authorization", basicAuth);
+
+            String user_pass = usernameEditText.getText() + ":" + passwordEditText.getText();
+            // Change to bearer authorization?
+            //final String basicAuth = "Bearer " + m_token;//Base64.encodeToString(user_pass.getBytes(), Base64.NO_WRAP);
+            //System.out.println(basicAuth);
+            //urlConnection.setRequestProperty("Authorization", basicAuth);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         urlConnection.setSSLSocketFactory(context.getSocketFactory());
+//        urlConnection.getSSLSocketFactory().
         try {
             System.out.println(urlConnection.getResponseMessage());
             System.out.println(urlConnection.getResponseCode());
@@ -217,8 +234,8 @@ public class LoginFragment extends Fragment {
         super.onCreate(savedInstanceState);
         System.out.println("IS ADDED? " + isAdded());
 
-        editTextTitle = view.findViewById(R.id.edit_text_title);
-        editTextMessage = view.findViewById(R.id.edit_text_message);
+//        editTextTitle = view.findViewById(R.id.edit_text_title);
+//        editTextMessage = view.findViewById(R.id.edit_text_message);
 
         CookieManager manager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
         CookieHandler.setDefault( manager  );
@@ -227,16 +244,16 @@ public class LoginFragment extends Fragment {
                 .get(LoginViewModel.class);
 
         // References to UI elements
-        final EditText usernameEditText = view.findViewById(R.id.username);
-        final EditText passwordEditText = view.findViewById(R.id.password);
+        usernameEditText = view.findViewById(R.id.username);
+        passwordEditText = view.findViewById(R.id.password);
         final Button loginButton = view.findViewById(R.id.login);
         final Button registerButton = view.findViewById(R.id.register);
         final ImageButton darkModeButton = view.findViewById(R.id.bDarkMode);
         final ImageButton languageButton = view.findViewById(R.id.bTranslate);
         final ProgressBar loadingProgressBar = view.findViewById(R.id.loading);
-        final Button bSend1 = view.findViewById(R.id.bSend1);
-        final Button bSend2 = view.findViewById(R.id.bSend2);
-        final Button bSSL = view.findViewById(R.id.bSSL);
+//        final Button bSend1 = view.findViewById(R.id.bSend1);
+//        final Button bSend2 = view.findViewById(R.id.bSend2);
+//        final Button bSSL = view.findViewById(R.id.bSSL);
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Observers (to control object visiblity, availability etc.)
@@ -304,7 +321,7 @@ public class LoginFragment extends Fragment {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     loginViewModel.login(usernameEditText.getText().toString(),
-                            passwordEditText.getText().toString(), getActivity());
+                            passwordEditText.getText().toString(), getActivity(), getFragmentManager(), usernameEditText, passwordEditText);
                 }
                 return false;
             }
@@ -314,9 +331,24 @@ public class LoginFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 loadingProgressBar.setVisibility(View.VISIBLE);
-                loginViewModel.login(usernameEditText.getText().toString(),
-                        passwordEditText.getText().toString(), getActivity());
-                getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, new ImageFragment()).commit();
+                boolean loggedIn = loginViewModel.login(usernameEditText.getText().toString(),
+                        passwordEditText.getText().toString(), getActivity(), getFragmentManager(), usernameEditText, passwordEditText);
+
+
+//                Bundle bundle = new Bundle();
+//                bundle.putString("username", usernameEditText.getText().toString());
+//                bundle.putString("password", passwordEditText.getText().toString());
+//                ImageFragment fragment = new ImageFragment();
+//                fragment.setArguments(bundle);
+//                getFragmentManager().beginTransaction().replace(R.id.flFragment, fragment).commit();
+
+
+                if (loggedIn == true)
+                ;
+                else {
+                    Toast.makeText(getActivity(), "incorrect credentials", Toast.LENGTH_LONG).show();
+                }
+
             }
         });
 
@@ -349,27 +381,27 @@ public class LoginFragment extends Fragment {
             }
         });
 
-        bSSL.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                doBasicAuth(view);
-            }
-        });
-
-
-        bSend1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendOnChannel1(view);
-            }
-        });
-
-        bSend2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendOnChannel2(view);
-            }
-        });
+//        bSSL.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                doBasicAuth(view);
+//            }
+//        });
+//
+//
+//        bSend1.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                sendOnChannel1(view);
+//            }
+//        });
+//
+//        bSend2.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                sendOnChannel2(view);
+//            }
+//        });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -377,9 +409,9 @@ public class LoginFragment extends Fragment {
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateUiWithUser(View view, LoggedInUserView model) {
-        String welcome = getString(R.string.welcome) + " " + model.getDisplayName();
+        //String welcome = getString(R.string.welcome) + " " + model.getDisplayName();
 
-        Toast.makeText(getActivity(), welcome, Toast.LENGTH_LONG).show();
+        //Toast.makeText(getActivity(), welcome, Toast.LENGTH_LONG).show();
     }
 
     private void showLoginFailed(@StringRes Integer errorString) {

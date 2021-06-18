@@ -1,7 +1,9 @@
 package com.example.cameraapp;
 
 import android.Manifest;
+import android.app.Notification;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -12,49 +14,98 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.FileUtils;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.cameraapp.ui.login.LoginViewModel;
 import com.example.cameraapp.ui.login.LoginViewModelFactory;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.security.cert.CertificateException;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+//import retrofit2.Callback;
+import retrofit2.Callback;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import okhttp3.MediaType.*;
+import okhttp3.RequestBody.*;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.app.Activity.RESULT_OK;
 import static android.content.Context.LOCATION_SERVICE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static com.android.volley.VolleyLog.TAG;
+import static com.example.cameraapp.App.CHANNEL_1_ID;
 
 public class TextFragment extends Fragment {
     View m_view;
+
+    private NotificationManagerCompat notificationManager;
 
     public TextFragment() {
         // Required empty public constructor
@@ -63,6 +114,7 @@ public class TextFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        notificationManager = NotificationManagerCompat.from(getActivity());
     }
 
     @Override
@@ -76,6 +128,7 @@ public class TextFragment extends Fragment {
     String fileContent;
     double latitude;
     double longitude;
+    Uri filePath;
 
     private final LocationListener mLocationListener = new LocationListener() {
         @Override
@@ -89,6 +142,73 @@ public class TextFragment extends Fragment {
 
     private LoginViewModel loginViewModel;
 
+    OkHttpClient.Builder getUnsafeOkHttpClient()
+    {
+        try {
+            // Create a trust manager that does not validate certificate chains
+            final TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                        }
+
+                        @Override
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new java.security.cert.X509Certificate[]{};
+                        }
+                    }
+            };
+
+            // Install the all-trusting trust manager
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+
+            // Create an ssl socket factory with our all-trusting manager
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            builder.sslSocketFactory(sslSocketFactory);
+            builder.hostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
+            return builder;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    void writeStreamToFile(InputStream input, File file) {
+        try {
+            try (OutputStream output = new FileOutputStream(file)) {
+                byte[] buffer = new byte[4 * 1024]; // or other buffer size
+                int read;
+                while ((read = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, read);
+                }
+                output.flush();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                input.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
     @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -98,6 +218,12 @@ public class TextFragment extends Fragment {
         final Button sendTextButton = view.findViewById(R.id.bSendText);
         final TextView loginInfo = view.findViewById(R.id.textView2);
         final Button images2Button = view.findViewById(R.id.myButton);
+        final TextView textView = view.findViewById(R.id.textView);
+        final EditText fileNameET = view.findViewById(R.id.fileName);
+
+        Bundle bundle = this.getArguments();
+        String username = bundle.getString("username");
+        String password = bundle.getString("password");
 
         loginViewModel = new ViewModelProvider(requireActivity(), new LoginViewModelFactory())
                 .get(LoginViewModel.class);
@@ -107,86 +233,216 @@ public class TextFragment extends Fragment {
         images2Button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, new ImageFragment()).commit();
+
+                Bundle bundle = new Bundle();
+                bundle.putString("username", loginViewModel.getDisplayName());
+                ImageFragment fragment = new ImageFragment();
+                fragment.setArguments(bundle);
+                getFragmentManager().beginTransaction().replace(R.id.flFragment, fragment).commit();
             }
         });
-
         sendTextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Showing the progress dialog
                 final ProgressDialog loading = ProgressDialog.show(getActivity(),"Uploading...","Please wait...",false,false);
-                String url ="https://webhook.site/c62781ca-517b-437f-ac57-158097c11701";
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
-                        new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String s) {
-                                //Disimissing the progress dialog
-                                loading.dismiss();
-                                //Showing toast message of the response
-                                Toast.makeText(getActivity(), "SUCCESS" , Toast.LENGTH_LONG).show();
-                            }
-                        },
-                        new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError volleyError) {
-                                //Dismissing the progress dialog
-                                loading.dismiss();
+                String url = "https://192.168.1.13:8443/api/fileDrop";
 
-                                //Showing toast
-                                Toast.makeText(getActivity(), "NO TEXT\n"+volleyError, Toast.LENGTH_LONG).show();
-                            }
-                        }){
+                ///////////////////////////////////
+                // Get token
+                String tokenUrl = "https://192.168.1.13:8443/api/auth/signIn";
+                Map<String, String> tokenParams = new HashMap<>();
+                tokenParams.put("username", username);
+                tokenParams.put("password", password);
+                System.out.println("COKOLWIEK TOKENOWE");
+
+                JsonObjectRequest tokenRequest = new JsonObjectRequest(Request.Method.POST,
+                        tokenUrl, new JSONObject(tokenParams), new Response.Listener<JSONObject>() {
                     @Override
-                    protected Map<String, String> getParams() throws AuthFailureError {
-                        //Converting Bitmap to String
-                        String image = fileContent;
-                        //Getting Image Name
-                        String name = "image";//editTextName.getText().toString().trim();
-                        //Creating parameters
-                        Map<String,String> params = new Hashtable<String, String>();
-                        params.put("empsno", "81");
-                        params.put("storesno", "165");
-                        params.put("lrSno", "1808");
-                        params.put("recQty", "0");
-                        params.put("recVol", "0");
-                        params.put("recWgt", "0");
-                        params.put("damageQty", "0");
-                        params.put("looseQty", "0");
-                        params.put("deliveryDate", "2016-09-24");
-                        params.put("deliveryTime", "10:15");
-                        params.put("uploadFile", image);
-                        params.put("remarks", "mytestingrem");
-                        params.put("receivedBy", "amankumar");
-                        params.put("ipAddress", "12.65.65.32");
+                    public void onResponse(JSONObject outresponse) {
+                        String text = textView.getText().toString();
+                        System.out.println(text);
 
-                        //returning parameters
-                        return params;
+                        System.out.println("MY PATH: " + filePath);
+                        System.out.println("MY PATH: " + filePath.getPath());
+
+                        String path = filePath.toString();
+
+                        InputStream stream = null;
+                        try {
+                            stream = getContext().getContentResolver().openInputStream(filePath);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+
+                        File file = null;
+                        try {
+                            String fp = getContext().getFilesDir().getPath().toString() + "/" + fileNameET.getText().toString();
+
+                            file = new File(fp);
+                            try (OutputStream output = new FileOutputStream(file)) {
+                                byte[] buffer = new byte[4 * 1024]; // or other buffer size
+                                int read;
+
+                                while ((read = stream.read(buffer)) != -1) {
+                                    output.write(buffer, 0, read);
+                                }
+
+                                output.flush();
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } finally {
+                            try {
+                                stream.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        if (file.exists())
+                            System.out.println("file: " + file);
+                        else
+                            System.out.println("FILE DOES NOT EXIST");
+
+
+
+                        // create retrofit instance
+                        Retrofit retrofit = new Retrofit.Builder()
+                                .baseUrl("https://192.168.1.13:8443/api/")
+                                .client(getUnsafeOkHttpClient().build())
+                                .addConverterFactory(GsonConverterFactory.create())
+                                .build();
+
+                        // create api instance
+                        Api api = retrofit.create(Api.class);
+
+                        String bearerToken = null;
+                        try {
+                            bearerToken = "Bearer " + outresponse.getString("token");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        // create call object
+                        Call<ResponseBody> uploadFileCall = api.uploadFile(bearerToken,
+                                MultipartBody.Part.createFormData(
+                                        "files",
+                                        file.getName(),
+                                        RequestBody.create(MediaType.parse(getContext().getContentResolver().getType(filePath)), file))
+                               );
+
+                        // sync call
+//                        try {
+//                            ResponseBody responseBody = uploadFileCall.execute().body();
+//                            System.out.println("RESPONSE" + responseBody);
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+
+                        // async call
+                        uploadFileCall.enqueue(new Callback<ResponseBody>() {
+                            @Override
+                            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                                if (response.isSuccessful()) {
+                                    System.out.println("TAKK");
+                                    System.out.println(call);
+                                    System.out.println(response);
+                                    loading.dismiss();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                                // TODO
+                                System.out.println("ERROR?");
+                                System.out.println(call);
+                                System.out.println(t);
+                                loading.dismiss();
+                            }
+                        });
+
+
+
+
+//                        Map<String, String> params = new HashMap<>();
+//                        //long imagename = System.currentTimeMillis();
+//                        params.put("file", new DataPart(fileNameET.getText().toString(), myFile));
+//                        params.put("path", new DataPart(fileNameET.getText().toString(), myFile));
+//
+//                        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST,
+//                                url, params, new Response.Listener<JSONObject>() {
+//                            @Override
+//                            public void onResponse(JSONObject response) {
+//                                Toast.makeText(getContext(), response.toString(), Toast.LENGTH_LONG).show();
+//                                Log.d(TAG, response.toString());
+//                                System.out.println("PLACKI");
+////                                if (response.toString().startsWith("success"))
+////                                    sendOnChannel1();
+////                                else
+////                                    sendErrorOnChannel1();
+//                                loading.dismiss();
+//                            }
+//                        }, new Response.ErrorListener() {
+//                            @Override
+//                            public void onErrorResponse(VolleyError error) {
+//                                System.out.println("ERROR:" + error);
+//                                VolleyLog.d(TAG, "Error: " + error.getMessage());
+//                                System.out.println("NIEDOBRE PLACKI");
+//                                Toast.makeText(getContext(), error.getMessage(), Toast.LENGTH_LONG).show();
+//                                loading.dismiss();
+//                            }
+//                        }) {
+//                            @Override
+//                            public Map<String, String> getHeaders() throws AuthFailureError {
+//                                HashMap<String, String> headers = new HashMap<String, String>();
+//                                String bearerToken = null;
+//                                try {
+//                                    bearerToken = "Bearer " + outresponse.getString("token");
+//                                } catch (JSONException e) {
+//                                    e.printStackTrace();
+//                                }
+//                                ;
+//                                System.out.println("MY BEARER TOKEN: " + bearerToken);
+//                                headers.put("Authorization", bearerToken);
+//                                return headers;
+//                            }
+//                        };
+//                        postRequest.setTag(TAG);
+//                        Volley.newRequestQueue(getContext()).add(postRequest);
+                    }
+                }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                        VolleyLog.d(TAG, "Error: " + error.getMessage());
+                        System.out.println("NIEDOBRE PLACKI TOKENOWE");
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        HashMap<String, String> headers = new HashMap<String, String>();
+                        headers.put("Content-Type", "application/json; charset=utf-8");
+                        return headers;
                     }
                 };
-
-                //Creating a Request Queue
-                RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-
-                //Adding request to the queue
-                requestQueue.add(stringRequest);
+                tokenRequest.setTag(TAG);
+                Volley.newRequestQueue(getContext()).add(tokenRequest);
             }
         });
-
-        // Request permissions and set strict mode
         ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.CAMERA,
                 WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_GRANTED);
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
-
-        // Get the Intent that started this activity
         Intent intent = getActivity().getIntent();
         String action = intent.getAction();
         String type = intent.getType();
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             if (type.startsWith("text/")) {
-                TextView textView = view.findViewById(R.id.textView);
+
                 textView.setMovementMethod(new ScrollingMovementMethod());
                 handleSendText(view, intent); // Handle text being sent
             }
@@ -211,6 +467,8 @@ public class TextFragment extends Fragment {
             Bundle bundle = intent.getExtras();
             if (bundle != null) {
                 for (String key : bundle.keySet()) {
+                    filePath = (Uri)bundle.get(key);
+                    System.out.println("bundle.get(key): " + bundle.get(key));
                     fileContent = readTextFile((Uri)bundle.get(key));
 
                     TextView textView = view.findViewById(R.id.textView);
@@ -265,5 +523,35 @@ public class TextFragment extends Fragment {
             ImageView imageView = (ImageView) m_view.findViewById(R.id.imageView2);
             imageView.setImageBitmap(imageBitmap);
         }
+    }
+
+    public void sendOnChannel1() {
+        String title = "File upload complete";
+        String message = "File successfully uploaded onto the server";
+
+        Notification notification = new NotificationCompat.Builder(getActivity(), CHANNEL_1_ID)
+                .setSmallIcon(R.drawable.ic_1)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .build();
+
+        notificationManager.notify(1, notification);
+    }
+
+    public void sendErrorOnChannel1() {
+        String title = "File upload error";
+        String message = "File not uploaded onto the server, it already exists or there was another error.";
+
+        Notification notification = new NotificationCompat.Builder(getActivity(), CHANNEL_1_ID)
+                .setSmallIcon(R.drawable.ic_1)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .build();
+
+        notificationManager.notify(1, notification);
     }
 }

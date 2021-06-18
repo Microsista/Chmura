@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.cameraapp.ui.login.LoginFragment;
+import com.example.cameraapp.ui.login.NukeSSLCerts;
 
 import java.util.Locale;
 
@@ -30,6 +31,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 public class MainActivity extends AppCompatActivity {
 
+    private String m_token;
     public void setLocale(String lang) {
         Locale myLocale = new Locale(lang);
         Resources res = getResources();
@@ -46,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        new NukeSSLCerts().nuke();
+
         setContentView(R.layout.activity_main);
 
         // Request permissions and set strict mode
@@ -64,6 +69,14 @@ public class MainActivity extends AppCompatActivity {
 //
 //            }
 //        });
+    }
+
+    public String getM_token() {
+        return m_token;
+    }
+
+    public void setM_token(String m_token) {
+        this.m_token = m_token;
     }
 }
 

@@ -25,6 +25,13 @@ import com.example.cameraapp.R;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
@@ -47,10 +54,17 @@ public class RegisterFragment extends Fragment {
 
     private LoginViewModel loginViewModel;
 
+    public LocalDate convertToLocalDateViaInstant(Date dateToConvert) {
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final EditText dobEditText = view.findViewById(R.id.dob);
+        final LocalDate[] date = {null};
 
         MaterialDatePicker.Builder builder = MaterialDatePicker.Builder.datePicker();
         MaterialDatePicker picker =  builder.build();
@@ -67,19 +81,32 @@ public class RegisterFragment extends Fragment {
         picker.addOnPositiveButtonClickListener(new MaterialPickerOnPositiveButtonClickListener<Long>() {
             @Override public void onPositiveButtonClick(Long selection) {
                 dobEditText.setText(picker.getHeaderText());
+                SimpleDateFormat dateFormatter = new SimpleDateFormat("MMM dd, yyyy");
 
+                LocalDate varDate = null;
+                try {
+                    varDate = convertToLocalDateViaInstant(dateFormatter.parse(picker.getHeaderText()));
+                    //dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+                    //System.out.println("Date: " + dateFormatter.format(varDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+
+
+                date[0] = varDate;
             }
         });
 
-
-        CookieManager manager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
-        CookieHandler.setDefault( manager  );
 
         loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory())
                 .get(LoginViewModel.class);
 
         final EditText usernameEditText = view.findViewById(R.id.username);
         final EditText passwordEditText = view.findViewById(R.id.password);
+        final EditText emailEditText = view.findViewById(R.id.email);
+
+
 
         final Button loginButton = view.findViewById(R.id.login);
         final Button registerButton = view.findViewById(R.id.register);
@@ -142,7 +169,7 @@ public class RegisterFragment extends Fragment {
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     loginViewModel.login(usernameEditText.getText().toString(),
-                            passwordEditText.getText().toString(), getActivity());
+                            passwordEditText.getText().toString(), getActivity(), getFragmentManager(), usernameEditText, passwordEditText);
                 }
                 return false;
             }
@@ -160,9 +187,13 @@ public class RegisterFragment extends Fragment {
             public void onClick(View v) {
                 System.out.println("REGISTERING");
                 loadingProgressBar.setVisibility(View.VISIBLE);
+                System.out.println("DATE: " + dobEditText.getText().toString());
+
+
                 loginViewModel.register(usernameEditText.getText().toString(),
-                        passwordEditText.getText().toString(), getActivity());
-                getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, new LoginFragment()).commit();
+                        passwordEditText.getText().toString(), emailEditText.getText().toString(), dobEditText.getText().toString(),
+                        getActivity(), getFragmentManager(), date[0]);
+                //getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.flFragment, new LoginFragment()).commit();
             }
         });
     }
