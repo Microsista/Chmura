@@ -72,6 +72,12 @@ const File = ({
     const [state2, setState2] = useState();
     const [ldummy, setLDummy] = useState();
 
+    if (typeof file.location !== "undefined") {
+        var coords = file.location.split(" ");
+        var latitude = parseFloat(coords[0]).toFixed(2);
+        var longitude = parseFloat(coords[1]).toFixed(2);
+    }
+
     const onRenameLocal = (idl) => {
         setEdit(!edit);
     };
@@ -150,7 +156,6 @@ const File = ({
                     setShared(emails);
                 })
                 .catch((error) =>
-                    //setShared({"dummy"});
                     console.log(`Unable to get sharedWith, error: `, error)
                 );
         }
@@ -224,7 +229,15 @@ const File = ({
                 </div>
 
                 <div className="item">
-                    {file.type === "dir" ? null : <p>{file.location}</p>}
+                    {file.type === "dir" ? null : (
+                        <p>
+                            {file.location == "0, 0, 0, 0"
+                                ? "not available"
+                                : typeof file.location !== "undefined"
+                                ? `[${latitude}, ${longitude}]`
+                                : ""}
+                        </p>
+                    )}
                 </div>
 
                 <div className="item">

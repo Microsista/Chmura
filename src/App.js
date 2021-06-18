@@ -34,46 +34,7 @@ import * as _ from "lodash";
 import { useEffect } from "react";
 import https from "https";
 
-// const useComponentWillMount = (func) => {
-//     const willMount = useRef(true);
-
-//     if (willMount.current) func();
-
-//     willMount.current = false;
-// };
-
 const App = () => {
-    // const willMount = useRef(true);
-
-    // if (willMount.current) setDummy(dummy + 1);
-
-    // willMount.current = false;
-    // useComponentWillMount(() => {
-    //     console.log("willMount");
-    //     // if (
-    //     //     typeof file.name !== "undefined" &&
-    //     //     typeof file.owner !== "undefined"
-    //     // ) {
-    //     //     axios
-    //     //         .get(
-    //     //             `https://localhost:8443/api/fileDrop/sharedWith?file_path=${file.owner}/${file.name}`,
-    //     //             {
-    //     //                 headers: { Authorization: token },
-    //     //             }
-    //     //         )
-    //     //         .then((res) => res.data)
-    //     //         .then((data) => {
-    //     //             var emails = data.map((entry) => entry.email);
-    //     //             setShared(emails);
-    //     //         })
-    //     //         .catch((error) =>
-    //     //             //setShared({"dummy"});
-    //     //             console.log(`Unable to get sharedWith, error: `, error)
-    //     //         );
-    //     // }
-    //     //setDummy(dummy + 1);
-    // });
-
     const [, forceUpdate] = useReducer((x) => x + 1, 0);
     var history = useHistory();
     //
@@ -117,34 +78,11 @@ const App = () => {
             }),
         });
 
-        // await instance
-        //     .post(`https://localhost:8443/api/auth/signIn`, data, {
-        //         headers: {
-        //             Accept: "application/json",
-        //             "Content-Type": "application/json",
-        //         },
-        //     })
-        //     .then((response) => response.json)
-        //     .then((data) => {
-        //         mytoken = data.token;
-        //     });
-
         const rawResponse = await fetch(
             "https://localhost:8443/api/auth/signIn",
             requestOptions
         );
 
-        // const rawResponse = await instance.post(
-        //     `https://localhost:8443/api/auth/signIn`,
-
-        //     data,
-        //     {
-        //         headers: {
-        //             Accept: "application/json",
-        //             "Content-Type": "application/json",
-        //         },
-        //     }
-        // );
         console.log(`rawResponse`, rawResponse);
 
         console.log("HEY");
@@ -177,28 +115,6 @@ const App = () => {
                 .then((outerdata) => {
                     fetchedData = outerdata;
                 });
-
-            // await instance
-            //     .get(
-            //         `https://localhost:8443/api/fileDrop`,
-            //         {
-            //             httpsAgent: new https.Agent({
-            //                 rejectUnauthorized: false,
-            //             }),
-            //         },
-            //         {
-            //             headers: {
-            //                 Accept: "application/json",
-            //                 "Content-Type": "application/json",
-            //                 Authorization: mystring,
-            //             },
-            //         }
-            //     )
-            //     .then((response) => response.json)
-            //     .then((data) => {
-            //         fetchedData = data;
-            //     });
-
             // get array size///////////////////////////////
 
             var k = 0;
@@ -247,27 +163,22 @@ const App = () => {
                             `https://localhost:8443/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
                             options2
                         );
-                        // var resp = await instance
-                        //     .get(
-                        //         `https://localhost:8443/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
-                        //         {
-                        //             httpsAgent: new https.Agent({
-                        //                 rejectUnauthorized: false,
-                        //             }),
-                        //         },
-                        //         {
-                        //             headers: {
-                        //                 Authorization: mystring,
-                        //             },
-                        //         }
-                        //     )
-                        //     .then((response) => response.json)
-                        //     .then((data) => {
-                        //         fetchedData = data;
-                        //     });
+
+                        var loc;
+                        await fetch(
+                            `https://localhost:8443/api/fileDrop/image?file_path=${i}/${dataentry[i][j]}`,
+                            options2
+                        )
+                            .then((response) => {
+                                var text = response.text();
+                                console.log(`response.text()`, text);
+                                return text;
+                            })
+                            .then((data) => (loc = data));
 
                         sizes[i][j] = resp.headers.get("content-length") / 1000;
-                        locations[i][j] = "[0.0, 0.0]";
+                        console.log(`loc`, loc);
+                        locations[i][j] = loc;
                     }
                 }
                 return functionWithPromise(dataentry);
@@ -284,22 +195,6 @@ const App = () => {
             var arr = [];
             var folders = [];
             await fetch("https://localhost:8443/api/fileDrop", options)
-                // await instance
-                //     .get(
-                //         "https://localhost:8443/api/fileDrop",
-                //         {
-                //             httpsAgent: new https.Agent({
-                //                 rejectUnauthorized: false,
-                //             }),
-                //         },
-                //         {
-                //             headers: {
-                //                 "Content-Type": "application/json",
-                //                 Accept: "application/json",
-                //                 Authorization: mystring,
-                //             },
-                //         }
-                //     )
                 .then((response) => response.json())
                 .then((outerdata) => {
                     Object.entries(outerdata).map((dat) => {
@@ -362,19 +257,6 @@ const App = () => {
                                 console.log("SHARED FILES:");
                                 // if this file is shared
 
-                                // for (var j = 0; j < data[i].length; j++) {
-                                //     console.log("i=" + i + ", j=" + j);
-                                //     console.log(`data[i][j]`, data[i][j]);
-                                //     console.log(`sizes[i][j]`, sizes[i][j]);
-                                //     checkSubfolder(
-                                //         arr,
-                                //         data[i][j],
-                                //         sizes[i][j],
-                                //         locations[i][j],
-                                //         data[i][j],
-                                //         i
-                                //     );
-                                // }
                                 var sliced = i.split("/");
                                 var folderName = sliced[0];
                                 // if this is a subdirectory
@@ -590,9 +472,22 @@ const App = () => {
                                 `https://localhost:8443/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
                                 options2
                             );
+
+                            var loc;
+                            await fetch(
+                                `https://localhost:8443/api/fileDrop/image?file_path=${i}/${dataentry[i][j]}`,
+                                options2
+                            )
+                                .then((response) => {
+                                    var text = response.text();
+                                    console.log(`response.text()`, text);
+                                    return text;
+                                })
+                                .then((data) => (loc = data));
+
                             sizes[i][j] =
                                 resp.headers.get("content-length") / 1000;
-                            locations[i][j] = "[0.0, 0.0]";
+                            locations[i][j] = loc;
                         }
                     }
                     return functionWithPromise(dataentry);
@@ -929,6 +824,7 @@ const App = () => {
         const data = new FormData();
         data.append("files", file.file);
         data.append("dir", file.dir);
+        console.log(`file.file`, file.file);
 
         await axios
             .post("https://localhost:8443/api/fileDrop", data, {
@@ -1056,34 +952,29 @@ const App = () => {
             var folderName = props[0];
             var dataentry = props[1];
 
-            // console.log(folderName);
-            // console.log("equal?");
-
-            // console.log(username);
-            // if (folderName !== username) {
-            //     var fn = folderName.substr(
-            //         username.length + 1,
-            //         folderName.length - 1
-            //     );
-            //     dataentry = fn + dataentry;
-            // }
-            //console.log(dataentry);
-
             var keys = Object.keys(dataentry);
 
             for (var i in dataentry) {
                 for (var j = 0; j < dataentry[i].length; j++) {
-                    // console.log(keys);
-                    // console.log(i);
-                    // console.log(keys[i]);
-                    // console.log(`${i}/${dataentry[i][j]}`);
-
                     var resp = await fetch(
                         `https://localhost:8443/api/fileDrop/download?file_path=${i}/${dataentry[i][j]}`,
                         options2
                     );
+
+                    var loc;
+                    await fetch(
+                        `https://localhost:8443/api/fileDrop/image?file_path=${i}/${dataentry[i][j]}`,
+                        options2
+                    )
+                        .then((response) => {
+                            var text = response.text();
+                            console.log(`response.text()`, text);
+                            return text;
+                        })
+                        .then((data) => (loc = data));
+
                     sizes[i][j] = resp.headers.get("content-length") / 1000;
-                    locations[i][j] = "[0.0, 0.0]";
+                    locations[i][j] = loc;
                 }
             }
             return functionWithPromise(dataentry);
