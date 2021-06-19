@@ -1,5 +1,6 @@
 package com.example.cameraapp.ui.login;
 
+import android.app.Notification;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
+import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -35,6 +37,8 @@ import java.util.Date;
 
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
+
+import static com.example.cameraapp.App.CHANNEL_1_ID;
 
 public class RegisterFragment extends Fragment {
     public RegisterFragment() {
@@ -206,4 +210,6 @@ public class RegisterFragment extends Fragment {
     private void showLoginFailed(@StringRes Integer errorString) {
         Toast.makeText(getActivity(), errorString, Toast.LENGTH_SHORT).show();
     }
+
+
 }

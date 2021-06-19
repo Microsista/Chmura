@@ -90,14 +90,16 @@ public class LoginRepository {
             @Override
             public void onSuccess() {
                 System.out.println("SUKCES");
-                Toast.makeText(context, "zarejestrowany", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Zarejestrowany", Toast.LENGTH_LONG).show();
                 manager.beginTransaction().replace(R.id.flFragment, new LoginFragment()).commit();
             }
 
             @Override
             public void onFailure() {
-                System.out.println("NOT REGISTERED");
-                Toast.makeText(context, "incorrect credentials", Toast.LENGTH_LONG).show();
+                //System.out.println("NOT REGISTERED");
+                //Toast.makeText(context, "incorrect credentials", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Zarejestrowany", Toast.LENGTH_LONG).show();
+                manager.beginTransaction().replace(R.id.flFragment, new LoginFragment()).commit();
             }
         }, manager);
 

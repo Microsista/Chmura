@@ -74,6 +74,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Random;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -236,6 +237,7 @@ public class TextFragment extends Fragment {
 
                 Bundle bundle = new Bundle();
                 bundle.putString("username", loginViewModel.getDisplayName());
+                bundle.putString("password", password);
                 ImageFragment fragment = new ImageFragment();
                 fragment.setArguments(bundle);
                 getFragmentManager().beginTransaction().replace(R.id.flFragment, fragment).commit();
@@ -251,6 +253,7 @@ public class TextFragment extends Fragment {
                 // Get token
                 String tokenUrl = "https://192.168.1.13:8443/api/auth/signIn";
                 Map<String, String> tokenParams = new HashMap<>();
+                System.out.println("USERNAME: "+username+" PASSWORD: "+password);
                 tokenParams.put("username", username);
                 tokenParams.put("password", password);
                 System.out.println("COKOLWIEK TOKENOWE");
@@ -259,158 +262,131 @@ public class TextFragment extends Fragment {
                         tokenUrl, new JSONObject(tokenParams), new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject outresponse) {
-                        String text = textView.getText().toString();
-                        System.out.println(text);
+                        if(!textView.getText().toString().equals("No text")) {
+                            String text = textView.getText().toString();
+                            System.out.println(text);
 
-                        System.out.println("MY PATH: " + filePath);
-                        System.out.println("MY PATH: " + filePath.getPath());
+                            System.out.println("MY PATH: " + filePath);
+                            System.out.println("MY PATH: " + filePath.getPath());
 
-                        String path = filePath.toString();
+                            String path = filePath.toString();
 
-                        InputStream stream = null;
-                        try {
-                            stream = getContext().getContentResolver().openInputStream(filePath);
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        }
-
-                        File file = null;
-                        try {
-                            String fp = getContext().getFilesDir().getPath().toString() + "/" + fileNameET.getText().toString();
-
-                            file = new File(fp);
-                            try (OutputStream output = new FileOutputStream(file)) {
-                                byte[] buffer = new byte[4 * 1024]; // or other buffer size
-                                int read;
-
-                                while ((read = stream.read(buffer)) != -1) {
-                                    output.write(buffer, 0, read);
-                                }
-
-                                output.flush();
+                            InputStream stream = null;
+                            try {
+                                stream = getContext().getContentResolver().openInputStream(filePath);
                             } catch (FileNotFoundException e) {
                                 e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
                             }
-                        } finally {
+
+                            File file = null;
                             try {
-                                stream.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                                if (fileNameET.getText().toString().equals("")) {
+                                    int leftLimit = 97; // letter 'a'
+                                    int rightLimit = 122; // letter 'z'
+                                    int targetStringLength = 10;
+                                    Random random = new Random();
+                                    StringBuilder buffer = new StringBuilder(targetStringLength);
+                                    for (int i = 0; i < targetStringLength; i++) {
+                                        int randomLimitedInt = leftLimit + (int)
+                                                (random.nextFloat() * (rightLimit - leftLimit + 1));
+                                        buffer.append((char) randomLimitedInt);
+                                    }
+                                    String generatedString = buffer.toString();
+                                    System.out.println(generatedString);
+                                    fileNameET.setText(generatedString);
+                                }
 
-                        if (file.exists())
-                            System.out.println("file: " + file);
-                        else
-                            System.out.println("FILE DOES NOT EXIST");
 
+                                String fp = getContext().getFilesDir().getPath().toString() + "/" + fileNameET.getText().toString() + ".txt";
 
+                                file = new File(fp);
+                                try (OutputStream output = new FileOutputStream(file)) {
+                                    byte[] buffer = new byte[4 * 1024]; // or other buffer size
+                                    int read;
 
-                        // create retrofit instance
-                        Retrofit retrofit = new Retrofit.Builder()
-                                .baseUrl("https://192.168.1.13:8443/api/")
-                                .client(getUnsafeOkHttpClient().build())
-                                .addConverterFactory(GsonConverterFactory.create())
-                                .build();
+                                    while ((read = stream.read(buffer)) != -1) {
+                                        output.write(buffer, 0, read);
+                                    }
 
-                        // create api instance
-                        Api api = retrofit.create(Api.class);
-
-                        String bearerToken = null;
-                        try {
-                            bearerToken = "Bearer " + outresponse.getString("token");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        // create call object
-                        Call<ResponseBody> uploadFileCall = api.uploadFile(bearerToken,
-                                MultipartBody.Part.createFormData(
-                                        "files",
-                                        file.getName(),
-                                        RequestBody.create(MediaType.parse(getContext().getContentResolver().getType(filePath)), file))
-                               );
-
-                        // sync call
-//                        try {
-//                            ResponseBody responseBody = uploadFileCall.execute().body();
-//                            System.out.println("RESPONSE" + responseBody);
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-
-                        // async call
-                        uploadFileCall.enqueue(new Callback<ResponseBody>() {
-                            @Override
-                            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                                if (response.isSuccessful()) {
-                                    System.out.println("TAKK");
-                                    System.out.println(call);
-                                    System.out.println(response);
-                                    loading.dismiss();
+                                    output.flush();
+                                } catch (FileNotFoundException e) {
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            } finally {
+                                try {
+                                    stream.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
                                 }
                             }
 
-                            @Override
-                            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                                // TODO
-                                System.out.println("ERROR?");
-                                System.out.println(call);
-                                System.out.println(t);
-                                loading.dismiss();
+                            if (file.exists())
+                                System.out.println("file: " + file);
+                            else
+                                System.out.println("FILE DOES NOT EXIST");
+
+
+                            // create retrofit instance
+                            Retrofit retrofit = new Retrofit.Builder()
+                                    .baseUrl("https://192.168.1.13:8443/api/")
+                                    .client(getUnsafeOkHttpClient().build())
+                                    .addConverterFactory(GsonConverterFactory.create())
+                                    .build();
+
+                            // create api instance
+                            Api api = retrofit.create(Api.class);
+
+                            String bearerToken = null;
+                            try {
+                                bearerToken = "Bearer " + outresponse.getString("token");
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
-                        });
 
+                            // create call object
+                            Call<ResponseBody> uploadFileCall = api.uploadFile(bearerToken,
+                                    MultipartBody.Part.createFormData(
+                                            "files",
+                                            file.getName(),
+                                            RequestBody.create(MediaType.parse(getContext().getContentResolver().getType(filePath)), file)),
+                                    MultipartBody.Part.createFormData("dir", "")
+                            );
+                            // async call
+                            uploadFileCall.enqueue(new Callback<ResponseBody>() {
+                                @Override
+                                public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                                    System.out.println(response.code());
+                                    System.out.println(response.toString());
+                                    System.out.println(response.body());
+                                    System.out.println(response.errorBody());
+                                    System.out.println(response.message());
+                                    System.out.println(response.raw());
+                                    System.out.println(response.headers());
+                                    if (response.isSuccessful()) {
+                                        System.out.println("TAKK");
+                                        System.out.println(call);
+                                        System.out.println(response);
+                                        loading.dismiss();
+                                        sendOnChannel1();
+                                    }
+                                }
 
-
-
-//                        Map<String, String> params = new HashMap<>();
-//                        //long imagename = System.currentTimeMillis();
-//                        params.put("file", new DataPart(fileNameET.getText().toString(), myFile));
-//                        params.put("path", new DataPart(fileNameET.getText().toString(), myFile));
-//
-//                        JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST,
-//                                url, params, new Response.Listener<JSONObject>() {
-//                            @Override
-//                            public void onResponse(JSONObject response) {
-//                                Toast.makeText(getContext(), response.toString(), Toast.LENGTH_LONG).show();
-//                                Log.d(TAG, response.toString());
-//                                System.out.println("PLACKI");
-////                                if (response.toString().startsWith("success"))
-////                                    sendOnChannel1();
-////                                else
-////                                    sendErrorOnChannel1();
-//                                loading.dismiss();
-//                            }
-//                        }, new Response.ErrorListener() {
-//                            @Override
-//                            public void onErrorResponse(VolleyError error) {
-//                                System.out.println("ERROR:" + error);
-//                                VolleyLog.d(TAG, "Error: " + error.getMessage());
-//                                System.out.println("NIEDOBRE PLACKI");
-//                                Toast.makeText(getContext(), error.getMessage(), Toast.LENGTH_LONG).show();
-//                                loading.dismiss();
-//                            }
-//                        }) {
-//                            @Override
-//                            public Map<String, String> getHeaders() throws AuthFailureError {
-//                                HashMap<String, String> headers = new HashMap<String, String>();
-//                                String bearerToken = null;
-//                                try {
-//                                    bearerToken = "Bearer " + outresponse.getString("token");
-//                                } catch (JSONException e) {
-//                                    e.printStackTrace();
-//                                }
-//                                ;
-//                                System.out.println("MY BEARER TOKEN: " + bearerToken);
-//                                headers.put("Authorization", bearerToken);
-//                                return headers;
-//                            }
-//                        };
-//                        postRequest.setTag(TAG);
-//                        Volley.newRequestQueue(getContext()).add(postRequest);
+                                @Override
+                                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                                    // TODO
+                                    System.out.println("ERROR?");
+                                    System.out.println(call);
+                                    System.out.println(t);
+                                    loading.dismiss();
+                                    sendErrorOnChannel1();
+                                }
+                            });
+                        } else {
+                            Toast.makeText(getContext(), "There is no file to send!", Toast.LENGTH_LONG).show();
+                            loading.dismiss();
+                        }
                     }
                 }, new Response.ErrorListener() {
 

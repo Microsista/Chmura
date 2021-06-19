@@ -3,6 +3,7 @@ package com.example.cameraapp;
 import android.Manifest;
 import android.app.Notification;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -18,9 +19,11 @@ import android.provider.MediaStore;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Base64;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -61,10 +64,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Random;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.app.Activity.RESULT_OK;
@@ -131,6 +136,31 @@ public class ImageFragment extends Fragment {
         final EditText usernameEditText = view.findViewById(R.id.username);
         final EditText passwordEditText = view.findViewById(R.id.password);
         final EditText fileNameET = view.findViewById(R.id.fileName);
+//        fileNameET.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+//            @Override
+//            public boolean onEditorAction(TextView v, int keyCode, KeyEvent event) {
+//                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+//                    // hide virtual keyboard
+//                    InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+//                    imm.hideSoftInputFromWindow(fileNameET.getWindowToken(), 0);
+//                    return true;
+//                }
+//                return false;
+//            }
+//        });
+
+//        fileNameET.setOnKeyListener(new View.OnKeyListener() {
+//            public boolean onKey(View v, int keyCode, KeyEvent event) {
+//                // If the event is a key-down event on the "enter" button
+//                if ((event.getAction() == KeyEvent.ACTION_DOWN) &&
+//                        (keyCode == KeyEvent.KEYCODE_ENTER)) {
+//                    // Perform action on key press
+//                    Toast.makeText(HelloFormStuff.this, edittext.getText(), Toast.LENGTH_SHORT).show();
+//                    return true;
+//                }
+//                return false;
+//            }
+//        });
 
         Bundle bundle = this.getArguments();
         String username = bundle.getString("username");
@@ -189,6 +219,7 @@ public class ImageFragment extends Fragment {
                 // Get token
                 String tokenUrl = "https://192.168.1.13:8443/api/auth/signIn";
                 Map<String, String> tokenParams = new HashMap<>();
+                System.out.println("USERNAME: "+username+" PASSWORD: "+password);
                 tokenParams.put("username", username);
                 tokenParams.put("password", password);
                 System.out.println("COKOLWIEK TOKENOWE");
@@ -197,69 +228,94 @@ public class ImageFragment extends Fragment {
                         tokenUrl, new JSONObject(tokenParams), new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject outresponse) {
-                        //Converting Bitmap to String
-                        String image = getStringImage(m_bitmap);
-                        System.out.println(image);
-                        //Getting Image Name
-                        String name = "image";//editTextName.getText().toString().trim();
-                        final JSONObject params = new JSONObject();
-                        try {
-                            params.put("geoWidth", String.valueOf(latitude));
-                            params.put("geoHeight", String.valueOf(longitude));
-                            params.put("image", image);
-                            params.put("path", fileNameET.getText());
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        StringRequest postRequest = new StringRequest(Request.Method.POST,
-                                url, new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
-                                Toast.makeText(getContext(), response, Toast.LENGTH_LONG).show();
-                                Log.d(TAG, response.toString());
-                                System.out.println("PLACKI");
-                                if (response.startsWith("success"))
-                                    sendOnChannel1();
-                                else
-                                    sendErrorOnChannel1();
-                                loading.dismiss();
-                            }
-                        }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                System.out.println("ERROR:" + error);
-                                VolleyLog.d(TAG, "Error: " + error.getMessage());
-                                System.out.println("NIEDOBRE PLACKI");
-                                Toast.makeText(getContext(), error.getMessage(), Toast.LENGTH_LONG).show();
-                                loading.dismiss();
-                            }
-                        }) {
-                            @Override
-                            public byte[] getBody() throws AuthFailureError {
-                                return params.toString().getBytes();
-                            }
-
-                            @Override
-                            public String getBodyContentType() {
-                                return "application/json";
-                            }
-                            @Override
-                            public Map<String, String> getHeaders() throws AuthFailureError {
-                                HashMap<String, String> headers = new HashMap<String, String>();
-                                String bearerToken = null;
-                                try {
-                                    bearerToken = "Bearer " + outresponse.getString("token");
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
+                        if (m_bitmap != null) {
+                            //Converting Bitmap to String
+                            String image = getStringImage(m_bitmap);
+                            System.out.println(image);
+                            //Getting Image Name
+                            String name = "image";//editTextName.getText().toString().trim();
+                            final JSONObject params = new JSONObject();
+                            try {
+                                params.put("geoWidth", String.valueOf(latitude));
+                                params.put("geoHeight", String.valueOf(longitude));
+                                params.put("image", image);
+                                System.out.println("NAME: " + fileNameET.getText().toString());
+                                if (fileNameET.getText().toString().equals("")) {
+                                    int leftLimit = 97; // letter 'a'
+                                    int rightLimit = 122; // letter 'z'
+                                    int targetStringLength = 10;
+                                    Random random = new Random();
+                                    StringBuilder buffer = new StringBuilder(targetStringLength);
+                                    for (int i = 0; i < targetStringLength; i++) {
+                                        int randomLimitedInt = leftLimit + (int)
+                                                (random.nextFloat() * (rightLimit - leftLimit + 1));
+                                        buffer.append((char) randomLimitedInt);
+                                    }
+                                    String generatedString = buffer.toString();
+                                    System.out.println(generatedString);
+                                    fileNameET.setText(generatedString);
                                 }
-                                ;
-                                System.out.println("MY BEARER TOKEN: " + bearerToken);
-                                headers.put("Authorization", bearerToken);
-                                return headers;
+
+                                params.put("path", fileNameET.getText() + ".jpg");
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
-                        };
-                        postRequest.setTag(TAG);
-                        Volley.newRequestQueue(getContext()).add(postRequest);
+                            StringRequest postRequest = new StringRequest(Request.Method.POST,
+                                    url, new Response.Listener<String>() {
+                                @Override
+                                public void onResponse(String response) {
+                                    Toast.makeText(getContext(), response, Toast.LENGTH_LONG).show();
+                                    Log.d(TAG, response.toString());
+                                    System.out.println("PLACKI");
+                                    if (response.startsWith("success"))
+                                        sendOnChannel1();
+                                    else
+                                        sendErrorOnChannel1();
+                                    loading.dismiss();
+                                }
+                            }, new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    System.out.println("ERROR:" + error);
+                                    VolleyLog.d(TAG, "Error: " + error.getMessage());
+                                    System.out.println("NIEDOBRE PLACKI");
+                                    Toast.makeText(getContext(), error.getMessage(), Toast.LENGTH_LONG).show();
+                                    loading.dismiss();
+                                }
+                            }) {
+                                @Override
+                                public byte[] getBody() throws AuthFailureError {
+                                    return params.toString().getBytes();
+                                }
+
+                                @Override
+                                public String getBodyContentType() {
+                                    return "application/json";
+                                }
+
+                                @Override
+                                public Map<String, String> getHeaders() throws AuthFailureError {
+                                    HashMap<String, String> headers = new HashMap<String, String>();
+                                    String bearerToken = null;
+                                    try {
+                                        bearerToken = "Bearer " + outresponse.getString("token");
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                    ;
+                                    System.out.println("MY BEARER TOKEN: " + bearerToken);
+                                    headers.put("Authorization", bearerToken);
+                                    return headers;
+                                }
+                            };
+                            postRequest.setTag(TAG);
+                            Volley.newRequestQueue(getContext()).add(postRequest);
+                        }
+                        else {
+                            Toast.makeText(getContext(), "There is no file to send!", Toast.LENGTH_LONG).show();
+                            loading.dismiss();
+                        }
+
                     }
                 }, new Response.ErrorListener() {
 

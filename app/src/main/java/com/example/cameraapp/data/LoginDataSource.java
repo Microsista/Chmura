@@ -177,7 +177,7 @@ public class LoginDataSource {
 
 
 
-    public Result<LoggedInUser> register(String username, String password, String email, String dob, Context context, LocalDate date, VolleyCallBack volleyCallBack, FragmentManager manager) {
+    public Result<LoggedInUser> register(String username, String password, String email, String dob, Context context, LocalDate date, VolleyCallBack callback, FragmentManager manager) {
 
 //        try {
 //            // create retrofit instance
@@ -266,7 +266,7 @@ public class LoginDataSource {
                         token = response.getString("token");
                         System.out.println("inside: " + token);
 
-                        //callBack.onSuccess();
+                        callback.onSuccess();
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -278,7 +278,7 @@ public class LoginDataSource {
                 public void onErrorResponse(VolleyError error) {
                     VolleyLog.d(TAG, "Error: " + error.getMessage());
                     System.out.println("NIEDOBRE PLACKI");
-                    //callBack.onFailure();
+                    callback.onFailure();
                 }
             }) {
                 /**

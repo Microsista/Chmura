@@ -6,7 +6,7 @@
     <string name="prompt_username">Nazwa użytkownika</string>
     <string name="prompt_password">Hasło</string>
     <string name="prompt_email">Email</string>
-<!--    <string name="prompt_fileName">Nazwa pliku</string>-->
+    <string name="prompt_filename">Nazwa pliku</string>
     <string name="date_of_birth">Data urodzenia</string>
     <string name="action_sign_in">Logowanie</string>
 
