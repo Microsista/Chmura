@@ -262,14 +262,13 @@ public class TextFragment extends Fragment {
                         tokenUrl, new JSONObject(tokenParams), new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject outresponse) {
-                        if(!textView.getText().toString().equals("No text")) {
+                        System.out.println("|"+ textView.getText().toString() + "|");
+                        if(!textView.getText().toString().equals("No text") && !textView.getText().toString().equals("Brak tekstu")) {
                             String text = textView.getText().toString();
                             System.out.println(text);
 
                             System.out.println("MY PATH: " + filePath);
-                            System.out.println("MY PATH: " + filePath.getPath());
 
-                            String path = filePath.toString();
 
                             InputStream stream = null;
                             try {
