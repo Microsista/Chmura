@@ -1,10 +1,9 @@
 package com.example.demo.services;
 
-import com.example.demo.fileDrop.FileNames;
-import com.example.demo.fileDrop.ImageLocation;
+import com.example.demo.DTOs.FileNames;
+import com.example.demo.models.ImageLocation;
 import com.example.demo.DTOs.Image;
 import com.example.demo.models.SharedFile;
-import com.example.demo.repositories.ImageRepository;
 import com.example.demo.repositories.SharedFilesRepository;
 import com.example.demo.models.Student;
 import com.example.demo.models.UserDetailsImpl;
@@ -73,6 +72,7 @@ public class FileService {
         if (!transferFile.exists()) {
             byte[] imageByte = Base64.getDecoder().decode(image.getImage());
             try {
+                transferFile.mkdirs();
                 new FileOutputStream(path).write(imageByte);
                 ImageLocation imageLocation = new ImageLocation(me().getUsername() + "/" + image.getPath(), image.getGeoHeight(), image.getGeoWidth());
                 imageService.save(imageLocation);

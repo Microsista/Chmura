@@ -1,9 +1,8 @@
 package com.example.demo.controllers;
 
-import com.example.demo.fileDrop.FileNames;
+import com.example.demo.DTOs.FileNames;
 import com.example.demo.DTOs.Image;
 import com.example.demo.services.FileService;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;

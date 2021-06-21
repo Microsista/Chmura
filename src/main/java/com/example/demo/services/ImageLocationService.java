@@ -1,6 +1,6 @@
 package com.example.demo.services;
 
-import com.example.demo.fileDrop.ImageLocation;
+import com.example.demo.models.ImageLocation;
 import com.example.demo.repositories.ImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.example.demo.fileDrop;
+package com.example.demo.models;
 
 import lombok.*;
 
