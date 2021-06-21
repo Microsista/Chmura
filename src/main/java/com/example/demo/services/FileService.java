@@ -72,7 +72,8 @@ public class FileService {
         if (!transferFile.exists()) {
             byte[] imageByte = Base64.getDecoder().decode(image.getImage());
             try {
-                transferFile.mkdirs();
+                File makeDir = new File(path.substring(0, path.lastIndexOf('/')));
+                makeDir.mkdirs();
                 new FileOutputStream(path).write(imageByte);
                 ImageLocation imageLocation = new ImageLocation(me().getUsername() + "/" + image.getPath(), image.getGeoHeight(), image.getGeoWidth());
                 imageService.save(imageLocation);
